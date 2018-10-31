@@ -114,7 +114,7 @@ until test $SALIR = true
                 SALIR=true
                 ;;
             *)
-                echo -e"\nOpción Incorrecta."
+                echo -e "\n Opción Incorrecta."
                 PRESS_TO_CONTINUE
                 ;;
         esac
