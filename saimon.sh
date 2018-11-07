@@ -3,7 +3,7 @@
 #  saimon.sh
 #  TrabajoSSOOI_I
 #
-#  Created by Güe Both on 31/10/18.
+#  Created by Güee Both on 31/10/18.
 #
 
 function TEST_ARGUMENTS
