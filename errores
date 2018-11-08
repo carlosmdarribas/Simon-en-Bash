@@ -1,0 +1,8 @@
+
+ERRORES
+
+0: No errors
+1: (TEST_ARGUMENTS) "Número incorrecto de argummentos." (Salir)
+2: (TEST_ARGUMENTS) "El argumento "X" es incorrecto." (Salir)
+3: (READ_PARAMETERS) "El archivo de configuracion no existe o no se puede leer" (No Salir)
+4: (READ_PARAMETERS) "Parametro de configuracion no encontrado"    (No Salir)

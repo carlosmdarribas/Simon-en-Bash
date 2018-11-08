@@ -8,6 +8,7 @@
 
 /* Begin PBXFileReference section */
 		5427A8C22194913A00B8C766 /* confi.cfg */ = {isa = PBXFileReference; lastKnownFileType = text; path = confi.cfg; sourceTree = "<group>"; };
+		5427A8C32194AE3100B8C766 /* errores */ = {isa = PBXFileReference; lastKnownFileType = text; path = errores; sourceTree = "<group>"; };
 		54DEC42E218A0FAC00AB0A50 /* saimon.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = saimon.sh; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -15,6 +16,7 @@
 		54DEC427218A0F8C00AB0A50 = {
 			isa = PBXGroup;
 			children = (
+				5427A8C32194AE3100B8C766 /* errores */,
 				54DEC42E218A0FAC00AB0A50 /* saimon.sh */,
 				5427A8C22194913A00B8C766 /* confi.cfg */,
 			);
