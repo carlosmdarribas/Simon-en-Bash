@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXFileReference section */
+		5427A8C22194913A00B8C766 /* confi.cfg */ = {isa = PBXFileReference; lastKnownFileType = text; path = confi.cfg; sourceTree = "<group>"; };
 		54DEC42E218A0FAC00AB0A50 /* saimon.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = saimon.sh; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -15,6 +16,7 @@
 			isa = PBXGroup;
 			children = (
 				54DEC42E218A0FAC00AB0A50 /* saimon.sh */,
+				5427A8C22194913A00B8C766 /* confi.cfg */,
 			);
 			sourceTree = "<group>";
 		};
