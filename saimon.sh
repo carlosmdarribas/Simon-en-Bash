@@ -17,6 +17,14 @@
 # Ruta del fichero de configuración (en directorio actual)
 CONFIG_FILE="confi.cfg"
 
+# Colores y sus parámetros.
+PURPLE='\e[95m'
+RED='\033[0;31m'  # DEBUG: Pasar a constantes
+GREEN='\033[0;32m'  # DEBUG: Pasar a constantes
+BLUE='\033[0;36m'  # DEBUG: Pasar a constantes
+YELLOW='\033[0;33m'  # DEBUG: Pasar a constantes
+NC='\033[0m' # No Color
+
 # Parámetros de configuración.
 NUM_COLORS=0
 STATS_FILE=""
@@ -24,6 +32,8 @@ TIME_BETWEEN=0
 
 # Vector que almacenará los colores de la secuencia en GAME.
 declare -a COLORS
+declare -a STATICS_COLORS=('R' 'A' 'V' 'Z') # Colores que pueden aparecer como máximo en la secuencia.
+
 #
 # TEST_ARGUMENTS
 #
@@ -43,7 +53,7 @@ function TEST_ARGUMENTS
                 ALLOWED_ARGUMENTS  #IMPLEMENT
             fi
         else
-            EXECUTE_GAME; # Si no tiene ningún parámetro, se ejecuta el juego.
+            EXECUTE_GAME; # Si no tiene ningún parámetro, o tiene más de los necesarios, se ejecuta el juego.
         fi
     else
         ERROR=1
@@ -80,7 +90,60 @@ function CONFIG_MENU
 function GAME
 {
     READ_PARAMETERS
+
+
+    FALLO=0
+    I=0
+
+    while [[ $FALLO -eq 0 ]]; do
+        # Metemos
+        NEXT_COLOR=$(( RANDOM % 4 ))
+
+        COLORS[$I]=${STATICS_COLORS[$NEXT_COLOR]}
+        I=$((I+1))
+
+        for (( J = 0; J < $I; J++ )); do
+            printf "_"${COLORS[$J]}" "
+        done
+
+        echo ""
+
+        for (( J = 0; J < $I; J++ )); do
+            SHOW_COLOR ${COLORS[$J]}
+            sleep $TIME_BETWEEN
+        done
+
+        K=0
+        while [[ $FALLO -eq 0 && $K -ne $I ]]; do
+            clear
+            printf "\n\nIntroduzca el color de la posición "
+            printf $((K+1))": "
+            read COLOR
+
+            if [[ $COLOR != ${COLORS[$K]} ]]; then
+                clear
+                PRINT_GAME_OVER
+                FALLO=1
+            fi
+            K=$((K+1))
+        done
+        # Tenemos en COLORS la secuencia que debe introducir el usuario.
+    done
 }
+
+function SHOW_COLOR
+{
+    # Argumento que se le pasa: $1, que contiene el color
+    case $1 in
+        'R' ) echo -ne ${RED} "███"${NC} ;;
+        'V' ) echo -ne ${GREEN} "███" ${NC} ;;
+        'A' ) echo -ne ${YELLOW} "███" ${NC} ;;
+        'Z' ) echo -ne ${BLUE} "███" ${NC} ;;
+        *) ERROR=5
+        SALIR=1 ;;
+    esac
+}
+
 
 function READ_PARAMETERS
 {
@@ -108,19 +171,25 @@ function READ_PARAMETERS
     fi
 }
 
+function PRINT_GAME_OVER
+{
+    echo -e "\n\n\n${RED}"
+    echo -e "\t\t  ▄████  ▄▄▄       ███▄ ▄███▓▓█████     ▒█████   ██▒   █▓▓█████  ██▀███  "
+    echo -e "\t\t  ██▒ ▀█▒▒████▄    ▓██▒▀█▀ ██▒▓█   ▀    ▒██▒  ██▒▓██░   █▒▓█   ▀ ▓██ ▒ ██▒"
+    echo -e "\t\t ▒██░▄▄▄░▒██  ▀█▄  ▓██    ▓██░▒███      ▒██░  ██▒ ▓██  █▒░▒███   ▓██ ░▄█ ▒"
+    echo -e "\t\t ░▓█  ██▓░██▄▄▄▄██ ▒██    ▒██ ▒▓█  ▄    ▒██   ██░  ▒██ █░░▒▓█  ▄ ▒██▀▀█▄  "
+    echo -e "\t\t░▒▓███▀▒ ▓█   ▓██▒▒██▒   ░██▒░▒████▒   ░ ████▓▒░   ▒▀█░  ░▒████▒░██▓ ▒██▒"
+    echo -e "\t\t░▒   ▒  ▒▒   ▓▒█░░ ▒░   ░  ░░░ ▒░ ░   ░ ▒░▒░▒░    ░ ▐░  ░░ ▒░ ░░ ▒▓ ░▒▓░"
+    echo -e "\t\t  ░   ░   ▒   ▒▒ ░░  ░      ░ ░ ░  ░     ░ ▒ ▒░    ░ ░░   ░ ░  ░  ░▒ ░ ▒░"
+    echo -e "\t\t ░ ░   ░   ░   ▒   ░      ░      ░      ░ ░ ░ ▒       ░░     ░     ░░   ░ "
+    echo -e "\t\t     ░       ░  ░       ░      ░  ░       ░ ░        ░     ░  ░   ░     "
+}
+
 function DISPLAY_MENU
 {
     echo -ne "\033]11;#800000\007"
 
-    GRAY='\e[95m'
-
-    RED='\033[0;31m'  # DEBUG: Pasar a constantes
-    GREEN='\033[0;32m'  # DEBUG: Pasar a constantes
-    BLUE='\033[0;36m'  # DEBUG: Pasar a constantes
-    YELLOW='\033[0;33m'  # DEBUG: Pasar a constantes
-    NC='\033[0m' # No Color
-
-    echo -e "\n${GRAY}"
+    echo -e "\n${PURPLE}"
     echo "███████╗ █████╗ ██╗███╗   ███╗ ██████╗ ███╗   ██╗"
     echo "██╔════╝██╔══██╗██║████╗ ████║██╔═══██╗████╗  ██║"
     echo "███████╗███████║██║██╔████╔██║██║   ██║██╔██╗ ██║"
@@ -141,7 +210,7 @@ function PRESS_TO_CONTINUE
 {
     echo -e "\nPulse <INTRO> para continuar."
     read
-    echo -e "\n"
+    echo -e "\n"${NC}
 }
 ###########################################################################################################################################################
 ###########################################################################################################################################################
@@ -165,6 +234,15 @@ until test $SALIR = true
         #COMO FUNCIONA:
         # Añadir:     ARRAY[1]="caracla"
         # Imprimir: echo ${ARRAY[1]}
+        # echo $(( RANDOM % 4 ))
+        # echo ${STATICS_COLORS[0]}
+        # +-----------------+
+        # | ███ - ███ - ███ |
+        # +-----------------+
+        # Implementación de RANDOM
+        # Cambios en GAME
+        # Implemento de GAME_OVER
+        #
         #
 
         DISPLAY_MENU
