@@ -3,7 +3,7 @@
 #  saimon.sh
 #  TrabajoSSOOI_I
 #
-#  Created by Güee Both on 31/10/18.
+#  Created by Carlos y Gonzalo on 31/10/18.
 #
 
 ###########################################################################################################################################################
@@ -34,6 +34,9 @@ TIME_BETWEEN=0
 declare -a COLORS
 declare -a STATICS_COLORS=('R' 'A' 'V' 'Z') # Colores que pueden aparecer como máximo en la secuencia.
 
+ERROR=0 #0 = No errors
+SALIR=false
+
 #
 # TEST_ARGUMENTS
 #
@@ -63,7 +66,7 @@ function TEST_ARGUMENTS
 #
 # SHOW_GROUP_DATA
 #
-# Mostramos el nombre de los autores.
+# Mostramos la información acerca de los autores.
 #
 function SHOW_GROUP_DATA
 {
@@ -91,43 +94,86 @@ function GAME
 {
     READ_PARAMETERS
 
-
-    FALLO=0
+    NUM_FALLOS=0        # Variable contador que posee el valor del número de fallos cometidos 
+    NUM_MAX_FALLOS=1    # Número máximo - 1 de fallos permitidos por el jugador.
+    NUM_ACIERTOS=19     # Número de aciertos necesarios para ganar (EL 0 es el primer acierto.)
+    SUCCES=0            # Flag de valor 1 si el jugador ha llegado al NUM_ACIERTOS de aciertos.
+    GAME_OVER=0         # Flag que valdrá 1 si el jugador comete NUM_FALLOS fallos, produciendo el game over.
     I=0
 
-    while [[ $FALLO -eq 0 ]]; do
+    MENU=1              # Flag que cambia la forma en que se realiza la introduccion de datos
+                        # 1 -> Seguido. | 2 -> Limpiando la pantalla.
+
+    #Mostramos la información sobre los colores.
+    COLOR_INFO 
+
+    while [[ $GAME_OVER -eq 0 ]]; do
         # Metemos
-        NEXT_COLOR=$(( RANDOM % 4 ))
+        NEXT_COLOR=$(( RANDOM % NUM_COLORS ))
 
         COLORS[$I]=${STATICS_COLORS[$NEXT_COLOR]}
         I=$((I+1))
 
-        for (( J = 0; J < $I; J++ )); do
-            printf "_"${COLORS[$J]}" "
-        done
-
-        echo ""
-
-        for (( J = 0; J < $I; J++ )); do
-            SHOW_COLOR ${COLORS[$J]}
-            sleep $TIME_BETWEEN
-        done
-
         K=0
-        while [[ $FALLO -eq 0 && $K -ne $I ]]; do
-            clear
-            printf "\n\nIntroduzca el color de la posición "
+
+        PRESENT_COLORS
+
+        if [[ $MENU -eq 1 ]]; then
+            clear 
+        fi
+
+        while [[ $GAME_OVER -eq 0 && $K -ne $I && $SUCCES -eq 0 ]]; do
+            
+            if [[ $MENU -eq 2 ]]; then
+                clear 
+            fi
+            if [[ $K -eq 0 || $MENU -eq 2 ]]; then
+                echo ""
+            fi
+
+            printf "\nIntroduzca el color de la posición "
             printf $((K+1))": "
             read COLOR
 
             if [[ $COLOR != ${COLORS[$K]} ]]; then
-                clear
-                PRINT_GAME_OVER
-                FALLO=1
+                if [[ $NUM_FALLOS -eq $NUM_MAX_FALLOS ]]; then
+                    # En caso de que el jugador falle y no le queden intentos.
+                    clear
+                    PRINT_GAME_OVER
+                    GAME_OVER=1
+                else
+                    # En caso de que el jugador falle pero todavia le queden intentos.
+                    NUM_FALLOS=$((NUM_FALLOS+1))
+                    K=$((K-1))
+                    echo -e ${RED}"\n\tHas fallado. Intentos restantes: "$((NUM_MAX_FALLOS-NUM_FALLOS+1))"."${NC}
+                    sleep 2;
+
+                    PRESENT_COLORS
+
+                    if [[ $MENU -eq 1 ]]; then
+                        clear 
+                    fi                
+                fi
+                if [[ $K -eq  $((NUM_ACIERTOS-1)) ]]; then
+                    SUCCES=1
+                fi
             fi
             K=$((K+1))
+            if [[ $SUCCES -eq 1 ]]; then
+                WINNER $K # IMPLEMENT
+            fi
         done
         # Tenemos en COLORS la secuencia que debe introducir el usuario.
+    done
+}
+
+function PRESENT_COLORS
+{
+    clear
+    echo ""
+    for (( J = 0; J < $I; J++ )); do
+        SHOW_COLOR ${COLORS[$J]}
+        sleep $TIME_BETWEEN
     done
 }
 
@@ -135,18 +181,53 @@ function SHOW_COLOR
 {
     # Argumento que se le pasa: $1, que contiene el color
     case $1 in
-        'R' ) echo -ne ${RED} "███"${NC} ;;
-        'V' ) echo -ne ${GREEN} "███" ${NC} ;;
-        'A' ) echo -ne ${YELLOW} "███" ${NC} ;;
-        'Z' ) echo -ne ${BLUE} "███" ${NC} ;;
+        'R' ) echo -ne ${RED} "████" ${NC} ;;
+        'V' ) echo -ne ${GREEN} "████" ${NC} ;;
+        'A' ) echo -ne ${YELLOW} "████" ${NC} ;;
+        'Z' ) echo -ne ${BLUE} "████" ${NC} ;;
         *) ERROR=5
         SALIR=1 ;;
     esac
 }
 
+function COLOR_INFO
+{
+    echo ""
+    echo "+------------------------+"
+    if [[ NUM_COLORS -eq 4 ]]; then
+        echo -e "| ${BLUE}Azul${NC}     ${BLUE}███${NC} ---> Z    |"    
+        echo "|                        |"
+    fi
+    echo -e "| ${RED}Rojo${NC}     ${RED}███${NC} ---> R    |"
+    echo "|                        |"
+    if [[ NUM_COLORS -ge 3 ]]; then
+        echo -e "| ${GREEN}Verde${NC}    ${GREEN}███${NC} ---> V    |"
+        echo "|                        |"
+    fi
+    echo -e "| ${YELLOW}Amarillo${NC} ${YELLOW}███${NC} ---> A    |"
+    echo "+------------------------+"
+
+    PRESS_TO_CONTINUE
+    clear
+}
+
+function FINISH_PROGRAM
+{
+    echo -ne "\nSaliendo del programa"
+    sleep 1
+    echo -n "."
+    sleep 1
+    echo -n "."
+    sleep 1
+    echo  "."
+    exit
+}
+
 
 function READ_PARAMETERS
 {
+
+    INCORRECT=false
 
     if test -r $CONFIG_FILE # Comprobamos que el archivo CONFIG_FILE exista.
     then
@@ -156,19 +237,47 @@ function READ_PARAMETERS
             VALUE=$(echo $line | cut -f 2 -d "=")
 
             case $KEY in
-                "NUMCOLORES" ) NUM_COLORS=$VALUE ;;
-                "ENTRETIEMPO" ) TIME_BETWEEN=$VALUE ;;
+                "NUMCOLORES" ) NUM_COLORS=$VALUE 
+                if [[ $NUM_COLORS -gt 4 || $NUM_COLORS -lt 2 ]]; then
+                    echo -e "\n"${RED}"ERROR: "${NC}"El parámetro NUMCOLORES del archivo "$CONFIG_FILE" es incorrecto."
+                    INCORRECT=true
+                fi    
+                ;;
+                "ENTRETIEMPO" ) TIME_BETWEEN=$VALUE
+                if [[ $TIME_BETWEEN -lt 1 || $TIME_BETWEEN -gt 4 ]]; then
+                    echo -e "\n"${RED}"ERROR: "${NC}"El parámetro ENTRETIEMPO del archivo "$CONFIG_FILE" es incorrecto."
+                    INCORRECT=true
+                fi    
+                ;;
                 "[ruta]log.txt" ) STATS_FILE=$VALUE ;;
-
                 *) ERROR=4 ;;
             esac
 
         done < $CONFIG_FILE
     else
         ERROR=3
-        echo "Desea crear el archivo de configuracion $CONFIG_FILE? (y/n)"
-        # IMPLEMENTAR: Crear archivo y pedir argumentos al usuario.
+        echo -ne "\nDesea crear el archivo de configuracion " $CONFIG_FILE"? (y/n)"
+        read CREATION_FILE_OPTION 
     fi
+
+    if  test $INCORRECT = true ; then
+        until [[ $CREATION_FILE_OPTION = "y" || $CREATION_FILE_OPTION == "Y" ]]; do
+                echo -ne "\nDesea crear de nuevo el archivo?(y/n): "
+                read CREATION_FILE_OPTION 
+            if [[ $CREATION_FILE_OPTION = "y" || $CREATION_FILE_OPTION == "Y" ]]; then
+                FILE_CREATOR # IMPLEMENT
+                FINISH_PROGRAM
+            elif [[ $CREATION_FILE_OPTION = "n" || $CREATION_FILE_OPTION == "N" ]]; then
+                FINISH_PROGRAM
+            else
+                echo -e ${RED}"\n\tOpción incorrecta."${NC}
+                sleep 1
+                clear
+            fi
+        done
+
+    fi
+
 }
 
 function PRINT_GAME_OVER
@@ -187,7 +296,7 @@ function PRINT_GAME_OVER
 
 function DISPLAY_MENU
 {
-    echo -ne "\033]11;#800000\007"
+    #echo -ne "\033]11;#800000\007"
 
     echo -e "\n${PURPLE}"
     echo "███████╗ █████╗ ██╗███╗   ███╗ ██████╗ ███╗   ██╗"
@@ -219,9 +328,6 @@ function PRESS_TO_CONTINUE
 #                                                     +-+-+-+-+-+-+-+ +-+-+-+-+-+-+-+-+-+                                                                 #
 #=========================================================================================================================================================#
 
-ERROR=0 #0 = No errors
-SALIR=false
-
 TEST_ARGUMENTS $*
 
 CHECK_ERROR ERROR
@@ -246,7 +352,7 @@ until test $SALIR = true
         #
 
         DISPLAY_MENU
-        printf "\nSeleccione una opcion: "
+        printf "\nSeleccione una opción: "
         read OPTION
 
         case $OPTION in
@@ -269,7 +375,7 @@ until test $SALIR = true
                 SALIR=true
                 ;;
             *)
-                echo -e "\n Opción Incorrecta."
+                echo -e ${RED}"\n Opción Incorrecta."${NC}
                 PRESS_TO_CONTINUE
                 ;;
         esac
