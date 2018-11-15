@@ -43,6 +43,8 @@ declare -a STATICS_COLORS=('R' 'A' 'V' 'Z') # Colores que pueden aparecer como 
 ERROR=0 #0 = No errors
 SALIR=false
 
+
+
 #
 # TEST_ARGUMENTS
 #
@@ -79,6 +81,23 @@ function SHOW_GROUP_DATA
     echo "Er Gonza y er Carlo han hesho eto" # DEBUG: Modificar en producción
 }
 
+function WRITE_TO_LOG
+{
+    # Partida|Fecha|Hora|Numerocolores|Tiempo|Longitudsecuencia|SecuenciaColores
+    PID=$$
+    DATE_AND_TIME=$(date +'%m-%d-%Y|%H:%M:%S')
+    LONG_SEC=$((I-1)) # Cambiar en produccion
+    TIME_PLAYED=$((TIME_FIN-TIME_INIT)) #Implementar
+
+    echo -ne $PID"|"$DATE_AND_TIME"|"$NUM_COLORS"|"$TIME_PLAYED"|"$LONG_SEC"|"  >> $STATS_FILE   
+    
+    for (( i = 0; i < I-2; i++ )); do
+        echo -ne ${COLORS[$i]}"-" >> $STATS_FILE
+    done
+
+    echo -e ${COLORS[$((I-1))]} >> $STATS_FILE
+
+}
 #
 # CHECK_ERROR
 #
@@ -99,6 +118,9 @@ function CONFIG_MENU
 function GAME
 {
     READ_PARAMETERS
+
+    TIME_INIT=$(date +'%s')
+
 
     NUM_FALLOS=0        # Variable contador que posee el valor del número de fallos cometidos 
     NUM_MAX_FALLOS=1    # Número máximo - 1 de fallos permitidos por el jugador.
@@ -147,6 +169,8 @@ function GAME
                     clear
                     PRINT_GAME_OVER
                     GAME_OVER=1
+                    TIME_FIN=$(date +'%s')
+                    WRITE_TO_LOG
                 else
                     # En caso de que el jugador falle pero todavia le queden intentos.
                     NUM_FALLOS=$((NUM_FALLOS+1))
@@ -166,6 +190,8 @@ function GAME
             fi
             K=$((K+1))
             if [[ $SUCCES -eq 1 ]]; then
+                TIME_FIN=$(date +'%s')
+                WRITE_TO_LOG
                 WINNER $K # IMPLEMENT
             fi
         done
@@ -263,7 +289,7 @@ function READ_PARAMETERS
                     INCORRECT=true
                 fi    
                 ;;
-                "[ruta]log.txt" ) STATS_FILE=$VALUE ;;
+                "ESTADISTICAS" ) STATS_FILE=$VALUE ;;
                 *) ERROR=4 ;;
             esac
 
@@ -396,4 +422,3 @@ until test $SALIR = true
 
         CHECK_ERROR ERROR
     done
-
