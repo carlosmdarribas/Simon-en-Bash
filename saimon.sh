@@ -218,7 +218,6 @@ function CONFIG_MENU
 
 function PRESENT_COLORS
 {
-
     clear
     echo ""
     for (( J = 0; J < $I; J++ )); do
@@ -486,7 +485,6 @@ function SHOW_GUI
         # Implementación de RANDOM
         # Cambios en GAME
         # Implemento de GAME_OVER
-        #
         #
 
         DISPLAY_MENU
