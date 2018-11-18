@@ -64,7 +64,7 @@ function TEST_ARGUMENTS
                 ALLOWED_ARGUMENTS  #IMPLEMENT
             fi
         else
-            EXECUTE_GAME; # Si no tiene ningún parámetro, o tiene más de los necesarios, se ejecuta el juego.
+            SHOW_GUI; # Si no tiene ningún parámetro, o tiene más de los necesarios, se ejecuta el juego.
         fi
     else
         ERROR=1
@@ -110,11 +110,8 @@ function CHECK_ERROR
     fi
 }
 
-function CONFIG_MENU
-{
-    READ_PARAMETERS
-}
 
+# Opcion 1. J) "Jugar"
 function GAME
 {
     READ_PARAMETERS
@@ -197,6 +194,25 @@ function GAME
         done
         # Tenemos en COLORS la secuencia que debe introducir el usuario.
     done
+}
+
+# Opcion 2. C) Configuracion.
+function CONFIG_MENU
+{
+    # Se lee el archivo de parámetros actuales.
+    READ_PARAMETERS
+
+    # Se solicitan al usuario los nuevos valores.
+    echo "Los parametros leidos del archivo de configuración han sido: "
+    echo -e "\tParámetro que indica el número de colores del juego, NUMCOLORES: "$NUM_COLORS
+    echo -e "\tParámetro que indica el tiempo entre muestras, ENTRETIEMPO: "$TIME_BETWEEN
+    echo -e "\tParámetro que indica la ruta del fichero de log, ESTADISTICAS: "$STATS_FILE
+
+    echo
+    read -p "¿Desea editar el archivo de configuración? [Y/n] "
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        CREATE_CONFIG_FILE 1 # 0: Crear. 1: Editar;
+    fi
 }
 
 function PRESENT_COLORS
@@ -301,13 +317,14 @@ function READ_PARAMETERS
     fi
 
     if  test $INCORRECT = true ; then
-        until [[ $CREATION_FILE_OPTION = "y" || $CREATION_FILE_OPTION == "Y" ]]; do
+        # DEBUG: Esto furrula?
+        until [[ $CREATION_FILE_OPTION == "y" || $CREATION_FILE_OPTION == "Y" ]]; do
                 echo -ne "\nDesea crear de nuevo el archivo?(y/n): "
                 read CREATION_FILE_OPTION 
-            if [[ $CREATION_FILE_OPTION = "y" || $CREATION_FILE_OPTION == "Y" ]]; then
-                FILE_CREATOR # IMPLEMENT
+            if [[ $CREATION_FILE_OPTION == "y" || $CREATION_FILE_OPTION == "Y" ]]; then
+                CREATE_CONFIG_FILE 0 # 0: Crear. 1: Editar
                 FINISH_PROGRAM
-            elif [[ $CREATION_FILE_OPTION = "n" || $CREATION_FILE_OPTION == "N" ]]; then
+            elif [[ $CREATION_FILE_OPTION == "n" || $CREATION_FILE_OPTION == "N" ]]; then
                 FINISH_PROGRAM
             else
                 echo -e ${RED}"\n\tOpción incorrecta."${NC}
@@ -317,8 +334,90 @@ function READ_PARAMETERS
         done
 
     fi
-
 }
+
+# Recibe un parámetro, que puede valer 0 o 1.
+# En el caso de que sea 0, indica que se desea crear el archivo, y se procederá normal.
+# En el caso de recibir un 1, indica que se desea editar y mostrará los valores actuales al usuario.
+function CREATE_CONFIG_FILE
+    {
+    # Pedimos el nombre del fichero de log.
+    CORRECT=0
+    until [[ $CORRECT -eq 1 ]]; do
+        if ! [[ -f $CONFIG_FILE ]]; then
+            echo -e "\n"${RED}"ERROR: "${NC}"Ruta o permisos inválidos al fichero de configuracion "$CONFIG_FILE
+            PRESS_TO_CONTINUE
+        elif  ! [[ -r $CONFIG_FILE ]] || ! [[ -w $CONFIG_FILE ]] &&  [[ -a $CONFIG_FILE ]]; then
+            echo -e "\n"${RED}"ERROR: "${NC}"Acceso denegado al fichero de configuracion."
+            PRESS_TO_CONTINUE
+        else
+            CORRECT=1
+        fi
+    done
+
+    # Pedimos los valores de NUMCOLORES
+    CORRECT=0
+    until [[ $CORRECT -eq 1 ]]; do
+        printf "Introduzca el número de colores (entre 2 y 4): "
+        if [[ $1 -eq 1 ]]; then
+            # Modo edicion. Mostramos el valor actual.
+            printf " (Valor actual %d): " $NUM_COLORS
+        fi
+
+        read READ_NUM_COLOURS
+
+        if [[ $READ_NUM_COLOURS -gt 4 || $READ_NUM_COLOURS -lt 2 ]]; then
+            echo -e "\n"${RED}"ERROR: "${NC}"El parámetro introducido es incorrecto."
+        else
+            NUM_COLORS=$READ_NUM_COLOURS
+            CORRECT=1
+        fi
+    done
+
+    # Pedimos los valores de ENTRETIEMPO
+    CORRECT=0
+    until [[ $CORRECT -eq 1 ]]; do
+        printf "Introduzca el tiempo entre opciones (entre 1 y 4): "
+
+        if [[ $1 -eq 1 ]]; then
+            # Modo edicion. Mostramos el valor actual.
+            printf " (Valor actual %d): " $TIME_BETWEEN
+        fi
+        read READ_TIME_BETWEEN
+
+        if [[ $READ_TIME_BETWEEN -gt 4 || $READ_TIME_BETWEEN -lt 1 ]]; then
+            echo -e "\n"${RED}"ERROR: "${NC}"El parámetro introducido es incorrecto."
+        else
+            TIME_BETWEEN=$READ_TIME_BETWEEN
+            CORRECT=1
+        fi
+    done
+
+    # Pedimos el nombre del fichero de log.
+    CORRECT=0
+    until [[ $CORRECT -eq 1 ]]; do
+
+        read -e -p "Introduzca el nombre y ubicacion del fichero de log:" -i $(pwd)"/log.txt" READ_FILE_PATH
+        touch $READ_FILE_PATH
+
+        if ! [[ -f $READ_FILE_PATH ]]; then
+            echo -e "\n"${RED}"ERROR: "${NC}"Ruta o permisos inválidos."
+            PRESS_TO_CONTINUE
+        elif  ! [[ -r $READ_FILE_PATH ]] || ! [[ -w $READ_FILE_PATH ]] &&  [[ -a $READ_FILE_PATH ]];  then
+            echo -e "\n"${RED}"ERROR: "${NC}"Acceso denegado sobre el fichero."
+            PRESS_TO_CONTINUE
+        else
+            CORRECT=1
+            STATS_FILE=$READ_FILE_PATH
+        fi
+    done
+
+    # Llegados a este punto los 3 parámetros serán correctos.
+    # En este caso, escribimos al nuevo archivo.
+    echo -e "NUMCOLORES="$NUM_COLORS"\nENTRETIEMPO="$TIME_BETWEEN"\nESTADISTICAS="$READ_FILE_PATH > $CONFIG_FILE
+    echo "Parametros cambiados correctamente."
+}
+
 
 function PRINT_GAME_OVER
 {
@@ -368,11 +467,9 @@ function PRESS_TO_CONTINUE
 #                                                     +-+-+-+-+-+-+-+ +-+-+-+-+-+-+-+-+-+                                                                 #
 #=========================================================================================================================================================#
 
-TEST_ARGUMENTS $*
-
-CHECK_ERROR ERROR
-
-until test $SALIR = true
+function SHOW_GUI
+{
+    until test $SALIR = true
     do
         clear
 
@@ -422,3 +519,9 @@ until test $SALIR = true
 
         CHECK_ERROR ERROR
     done
+}
+
+
+# NUEVA FUNCION PRINCIPAL
+TEST_ARGUMENTS $*
+CHECK_ERROR ERROR
