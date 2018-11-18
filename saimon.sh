@@ -208,6 +208,7 @@ function CONFIG_MENU
     echo -e "\tParámetro que indica el tiempo entre muestras, ENTRETIEMPO: "$TIME_BETWEEN
     echo -e "\tParámetro que indica la ruta del fichero de log, ESTADISTICAS: "$STATS_FILE
 
+    # Se muestra una línea en blanco y se pregunta si se desea modificar. 
     echo
     read -p "¿Desea editar el archivo de configuración? [Y/n] "
     if [[ $REPLY =~ ^[Yy]$ ]]; then
