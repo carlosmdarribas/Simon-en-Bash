@@ -61,7 +61,7 @@ function TEST_ARGUMENTS
                 SALIR=true
             else
                 ERROR=2
-                ALLOWED_ARGUMENTS  #IMPLEMENT
+                SHOW_ALLOWED_ARGUMENTS # Mostramos la forma de uso del script.
             fi
         else
             SHOW_GUI; # Si no tiene ningún parámetro, o tiene más de los necesarios, se ejecuta el juego.
@@ -69,6 +69,16 @@ function TEST_ARGUMENTS
     else
         ERROR=1
     fi
+}
+
+#
+# SHOW_ALLOWED_ARGUMENTS
+#
+# Mostramos en pantalla la información con respecto al uso del script.
+#
+function SHOW_ALLOWED_ARGUMENTS
+{
+    echo "Uso: ./saimon.sh [-g]"
 }
 
 #
@@ -81,6 +91,11 @@ function SHOW_GROUP_DATA
     echo "Er Gonza y er Carlo han hesho eto" # DEBUG: Modificar en producción
 }
 
+#
+# WRITE_TO_LOG
+#
+# Escribimos en el log previamente definido ($STATS_FILE) los datos correspondientes.
+#
 function WRITE_TO_LOG
 {
     # Partida|Fecha|Hora|Numerocolores|Tiempo|Longitudsecuencia|SecuenciaColores
@@ -96,8 +111,8 @@ function WRITE_TO_LOG
     done
 
     echo -e ${COLORS[$((I-1))]} >> $STATS_FILE
-
 }
+
 #
 # CHECK_ERROR
 #
@@ -189,7 +204,7 @@ function GAME
             if [[ $SUCCES -eq 1 ]]; then
                 TIME_FIN=$(date +'%s')
                 WRITE_TO_LOG
-                WINNER $K # IMPLEMENT
+                PRINT_WINNER $K
             fi
         done
         # Tenemos en COLORS la secuencia que debe introducir el usuario.
@@ -336,6 +351,9 @@ function READ_PARAMETERS
     fi
 }
 
+#
+# CREATE_CONFIG_FILE
+#
 # Recibe un parámetro, que puede valer 0 o 1.
 # En el caso de que sea 0, indica que se desea crear el archivo, y se procederá normal.
 # En el caso de recibir un 1, indica que se desea editar y mostrará los valores actuales al usuario.
@@ -418,20 +436,12 @@ function CREATE_CONFIG_FILE
     echo "Parametros cambiados correctamente."
 }
 
-
-function PRINT_GAME_OVER
-{
-    echo -e "\n\n\n${RED}"
-    echo -e "\t\t  ▄████  ▄▄▄       ███▄ ▄███▓▓█████     ▒█████   ██▒   █▓▓█████  ██▀███  "
-    echo -e "\t\t  ██▒ ▀█▒▒████▄    ▓██▒▀█▀ ██▒▓█   ▀    ▒██▒  ██▒▓██░   █▒▓█   ▀ ▓██ ▒ ██▒"
-    echo -e "\t\t ▒██░▄▄▄░▒██  ▀█▄  ▓██    ▓██░▒███      ▒██░  ██▒ ▓██  █▒░▒███   ▓██ ░▄█ ▒"
-    echo -e "\t\t ░▓█  ██▓░██▄▄▄▄██ ▒██    ▒██ ▒▓█  ▄    ▒██   ██░  ▒██ █░░▒▓█  ▄ ▒██▀▀█▄  "
-    echo -e "\t\t░▒▓███▀▒ ▓█   ▓██▒▒██▒   ░██▒░▒████▒   ░ ████▓▒░   ▒▀█░  ░▒████▒░██▓ ▒██▒"
-    echo -e "\t\t░▒   ▒  ▒▒   ▓▒█░░ ▒░   ░  ░░░ ▒░ ░   ░ ▒░▒░▒░    ░ ▐░  ░░ ▒░ ░░ ▒▓ ░▒▓░"
-    echo -e "\t\t  ░   ░   ▒   ▒▒ ░░  ░      ░ ░ ░  ░     ░ ▒ ▒░    ░ ░░   ░ ░  ░  ░▒ ░ ▒░"
-    echo -e "\t\t ░ ░   ░   ░   ▒   ░      ░      ░      ░ ░ ░ ▒       ░░     ░     ░░   ░ "
-    echo -e "\t\t     ░       ░  ░       ░      ░  ░       ░ ░        ░     ░  ░   ░     "
-}
+###########################################################################################################################################################
+###########################################################################################################################################################
+#                                                     +-+-+-+-+-+-+-+ +-+-+-+-+-+-+-+-+-+-+-+-+                                                           #
+#                                                     | IMPRESION | DE | MENSAJES EN PANTALLA |                                                           #
+#                                                     +-+-+-+-+-+-+-+ +-+-+-+-+-+-+-+-+-+-+-+-+                                                           #
+#=========================================================================================================================================================#
 
 function DISPLAY_MENU
 {
@@ -452,6 +462,33 @@ function DISPLAY_MENU
     echo -e "${YELLOW}S) SALIR"
     echo -e "${NC}"
 
+}
+
+
+function PRINT_GAME_OVER
+{
+    echo -e "\n\n\n${RED}"
+    echo -e "\t\t  ▄████  ▄▄▄       ███▄ ▄███▓▓█████     ▒█████   ██▒   █▓▓█████  ██▀███  "
+    echo -e "\t\t  ██▒ ▀█▒▒████▄    ▓██▒▀█▀ ██▒▓█   ▀    ▒██▒  ██▒▓██░   █▒▓█   ▀ ▓██ ▒ ██▒"
+    echo -e "\t\t ▒██░▄▄▄░▒██  ▀█▄  ▓██    ▓██░▒███      ▒██░  ██▒ ▓██  █▒░▒███   ▓██ ░▄█ ▒"
+    echo -e "\t\t ░▓█  ██▓░██▄▄▄▄██ ▒██    ▒██ ▒▓█  ▄    ▒██   ██░  ▒██ █░░▒▓█  ▄ ▒██▀▀█▄  "
+    echo -e "\t\t░▒▓███▀▒ ▓█   ▓██▒▒██▒   ░██▒░▒████▒   ░ ████▓▒░   ▒▀█░  ░▒████▒░██▓ ▒██▒"
+    echo -e "\t\t░▒   ▒  ▒▒   ▓▒█░░ ▒░   ░  ░░░ ▒░ ░   ░ ▒░▒░▒░    ░ ▐░  ░░ ▒░ ░░ ▒▓ ░▒▓░"
+    echo -e "\t\t  ░   ░   ▒   ▒▒ ░░  ░      ░ ░ ░  ░     ░ ▒ ▒░    ░ ░░   ░ ░  ░  ░▒ ░ ▒░"
+    echo -e "\t\t ░ ░   ░   ░   ▒   ░      ░      ░      ░ ░ ░ ▒       ░░     ░     ░░   ░ "
+    echo -e "\t\t     ░       ░  ░       ░      ░  ░       ░ ░        ░     ░  ░   ░     "
+}
+
+function PRINT_WINNER
+{
+    echo -e "\n\n\n${RED}"
+    echo -e "\t                           _   _     _   _   U _____ u   ____     "
+    echo -e "\t __        __     ___     | \ |"|   | \ |"|  \| ___"|/U |  _"\ u  "
+    echo -e "\t \"\      /"/    |_"_|   <|  \| |> <|  \| |>  |  _|"   \| |_) |/  "
+    echo -e "\t /\ \ /\ / /\     | |    U| |\  |u U| |\  |u  | |___    |  _ <    "
+    echo -e "\tU  \ V  V /  U  U/| |\u   |_| \_|   |_| \_|   |_____|   |_| \_\   "
+    echo -e "\t.-,_\ /\ /_,-.-,_|___|_,-.||   \\,-.||   \\,-.<<   >>   //   \\_  "
+    echo -e "\t \_)-'  '-(_/ \_)-' '-(_/ (_")  (_/ (_")  (_/(__) (__) (__)  (__) "
 }
 
 function PRESS_TO_CONTINUE
