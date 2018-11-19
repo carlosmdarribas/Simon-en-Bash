@@ -79,6 +79,7 @@ function TEST_ARGUMENTS
 function SHOW_ALLOWED_ARGUMENTS
 {
     echo "Uso: ./saimon.sh [-g]"
+    echo -e "\n\t -g \t\t Muestra los integrantes del equipo desarrollador del script\n"
 }
 
 #
@@ -481,14 +482,14 @@ function PRINT_GAME_OVER
 
 function PRINT_WINNER
 {
-    echo -e "\n\n\n${RED}"
+    echo -e "\n\n\n${GREEN}"
     echo -e "\t                           _   _     _   _   U _____ u   ____     "
-    echo -e "\t __        __     ___     | \ |"|   | \ |"|  \| ___"|/U |  _"\ u  "
-    echo -e "\t \"\      /"/    |_"_|   <|  \| |> <|  \| |>  |  _|"   \| |_) |/  "
-    echo -e "\t /\ \ /\ / /\     | |    U| |\  |u U| |\  |u  | |___    |  _ <    "
-    echo -e "\tU  \ V  V /  U  U/| |\u   |_| \_|   |_| \_|   |_____|   |_| \_\   "
-    echo -e "\t.-,_\ /\ /_,-.-,_|___|_,-.||   \\,-.||   \\,-.<<   >>   //   \\_  "
-    echo -e "\t \_)-'  '-(_/ \_)-' '-(_/ (_")  (_/ (_")  (_/(__) (__) (__)  (__) "
+    echo -e '\t __        __     ___     | \ |"|   | \ |"|  \| ___"|/U |  _"\ u  '
+    echo -e '\t \"\      /"/    |_"_|   <|  \| |> <|  \| |>  |  _|"   \| |_) |/  '
+    echo -e '\t /\ \ /\ / /\     | |    U| |\  |u U| |\  |u  | |___    |  _ <    '
+    echo -e '\tU  \ V  V /  U  U/| |\u   |_| \_|   |_| \_|   |_____|   |_| \_\   '
+    echo -e '\t.-,_\ /\ /_,-.-,_|___|_,-.||   \\,-.||   \\,-.<<   >>   //   \\_  '
+    echo -e '\t \_)-'  '-(_/ \_)-' '-(_/ (_")  (_/ (_")  (_/(__) (__) (__)  (__) '
 }
 
 function PRESS_TO_CONTINUE
