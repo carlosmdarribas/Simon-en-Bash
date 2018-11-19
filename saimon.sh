@@ -35,6 +35,8 @@ MENU=1              # Flag que cambia la forma en que se realiza la introduccion
                     # 1 -> Seguido. | 2 -> Limpiando la pantalla.
 SALTO=1             # Flag que cambia la forma en que se colocan los colores.
                     # 0 -> Seguidos. |1 -> De 5 en 5. | 2 -> De 10 en 10.
+MODE=0              # Flag que cambia el modo de juego.
+                    # 0 -> Lista seguida | 1 -> Lista intermitente.
 
 # Vector que almacenará los colores de la secuencia en GAME.
 declare -a COLORS
@@ -126,6 +128,13 @@ function CHECK_ERROR
     fi
 }
 
+function PRINT_ERROR
+{
+
+    echo "ERROR:"
+    echo -e $ERROR
+
+}
 
 # Opcion 1. J) "Jugar"
 function GAME
@@ -137,7 +146,7 @@ function GAME
 
     NUM_FALLOS=0        # Variable contador que posee el valor del número de fallos cometidos 
     NUM_MAX_FALLOS=1    # Número máximo - 1 de fallos permitidos por el jugador.
-    NUM_ACIERTOS=19     # Número de aciertos necesarios para ganar (EL 0 es el primer acierto.)
+    NUM_ACIERTOS=20     # Número de aciertos necesarios para ganar.
     SUCCES=0            # Flag de valor 1 si el jugador ha llegado al NUM_ACIERTOS de aciertos.
     GAME_OVER=0         # Flag que valdrá 1 si el jugador comete NUM_MAX_FALLOS fallos, produciendo el game over.
     I=0                 # Variable que contiene el número total de colores.
@@ -156,8 +165,9 @@ function GAME
         I=$((I+1))
 
         K=0
-
-        PRESENT_COLORS 
+        if [[ $I -ne  $((NUM_ACIERTOS+1)) ]]; then
+            PRESENT_COLORS
+        fi
 
         if [[ $MENU -eq 1 ]]; then
             clear 
@@ -170,6 +180,15 @@ function GAME
             fi
             if [[ $K -eq 0 || $MENU -eq 2 ]]; then
                 echo ""
+            fi
+
+            if [[ $I -eq  $((NUM_ACIERTOS+1)) ]]; then
+                SUCCES=1
+                TIME_FIN=$(date +'%s')
+                WRITE_TO_LOG
+                PRINT_WINNER $K
+                PRESS_TO_CONTINUE
+                SHOW_GUI
             fi
 
             printf "\nIntroduzca el color de la posición "
@@ -197,18 +216,9 @@ function GAME
                         clear 
                     fi                
                 fi
-                if [[ $K -eq  $((NUM_ACIERTOS-1)) ]]; then
-                    SUCCES=1
-                fi
             fi
             K=$((K+1))
-            if [[ $SUCCES -eq 1 ]]; then
-                TIME_FIN=$(date +'%s')
-                WRITE_TO_LOG
-                PRINT_WINNER $K
-            fi
         done
-        # Tenemos en COLORS la secuencia que debe introducir el usuario.
     done
 }
 
@@ -239,6 +249,10 @@ function PRESENT_COLORS
     for (( J = 0; J < $I; J++ )); do
         SHOW_COLOR ${COLORS[$J]} 
         sleep $TIME_BETWEEN
+        if [[ MODE -eq 1 ]]; then
+            clear
+            echo ""
+        fi
     done
 }
 
@@ -285,12 +299,14 @@ function COLOR_INFO
 
 function FINISH_PROGRAM
 {
+
+    TIME_TO_SLEEP=0.6
     echo -ne "\nSaliendo del programa"
-    sleep 1
+    sleep $TIME_TO_SLEEP
     echo -n "."
-    sleep 1
+    sleep $TIME_TO_SLEEP
     echo -n "."
-    sleep 1
+    sleep $TIME_TO_SLEEP
     echo  "."
     exit
 }
@@ -333,7 +349,6 @@ function READ_PARAMETERS
     fi
 
     if  test $INCORRECT = true ; then
-        # DEBUG: Esto furrula?
         until [[ $CREATION_FILE_OPTION == "y" || $CREATION_FILE_OPTION == "Y" ]]; do
                 echo -ne "\nDesea crear de nuevo el archivo?(y/n): "
                 read CREATION_FILE_OPTION 
@@ -490,6 +505,7 @@ function PRINT_WINNER
     echo -e '\tU  \ V  V /  U  U/| |\u   |_| \_|   |_| \_|   |_____|   |_| \_\   '
     echo -e '\t.-,_\ /\ /_,-.-,_|___|_,-.||   \\,-.||   \\,-.<<   >>   //   \\_  '
     echo -e '\t \_)-'  '-(_/ \_)-' '-(_/ (_")  (_/ (_")  (_/(__) (__) (__)  (__) '
+    echo -e "\n\n"
 }
 
 function PRESS_TO_CONTINUE
@@ -547,12 +563,14 @@ function SHOW_GUI
                 ;;
             "S")
                 SALIR=true
+                FINISH_PROGRAM
                 ;;
             *)
                 echo -e ${RED}"\n Opción Incorrecta."${NC}
                 PRESS_TO_CONTINUE
                 ;;
         esac
+
 
         CHECK_ERROR ERROR
     done
