@@ -508,14 +508,18 @@ function STATS
             fi
             if [[ $LONGEST_COLORSEC -le ${LENGTHS[$GAMES]} ]]; then
                 for (( I = 0; I <= 6; I++ )); do
-                    LONGEST_COLORSEC_GAME[$I]=$(echo $line | cut -f $((I+1)) -d "|")    # Tomamos la información de la partida con la secuencia de colores más larga.
+                    # Tomamos la información de la partida con la secuencia de colores más larga.
+                    LONGEST_COLORSEC_GAME[$I]=$(echo $line | cut -f $((I+1)) -d "|")   
                 done
                 NUMCOLOR_SEC_LONGEST=$(echo $line | cut -f 4 -d "|")
-                LONGEST_COLORSEC=$(echo $line | cut -f 6 -d "|")                        # Tomamos la longitud de la secuencia de colores de la partida con la secuencia más larga.
-                COLOR_SEC_LONGEST=$(echo $line | cut -f 7 -d "|")                       # Tomamos la secuencia de colores de la partida con la secuencia más larga.
+
+                # Tomamos la longitud de la secuencia de colores de la partida con la secuencia más larga.
+                LONGEST_COLORSEC=$(echo $line | cut -f 6 -d "|")                        
+                # Tomamos la secuencia de colores de la partida con la secuencia más larga.
+                COLOR_SEC_LONGEST=$(echo $line | cut -f 7 -d "|")                       
             fi
 
-            GAMES=$((GAMES+1))                                                          # Aumentamos el número de partidas jugadas a mediada que leemos cada línea.
+            GAMES=$((GAMES+1))  # Aumentamos el número de partidas jugadas a mediada que leemos cada línea.
 
         done < $STATS_FILE
 
@@ -531,7 +535,8 @@ function STATS
         done
 
         for (( I = 0; I < $GAMES; I++ )); do
-            TOTAL_LENGTH=$((TOTAL_LENGTH+(LENGTHS[$I]))) # Hallamos lalongitud total, resultado de la suma de las longitudes de las secuencias de colores de todas las partidas.
+            # Hallamos lalongitud total, resultado de la suma de las longitudes de las secuencias de colores de todas las partidas.
+            TOTAL_LENGTH=$((TOTAL_LENGTH+(LENGTHS[$I]))) 
         done
 
 
@@ -877,8 +882,8 @@ function DISPLAY_MENU
     echo -e "${NC}\n"
 
     echo -e "${RED}J) JUGAR"
-    echo -e "${GREEN}C) CONFIGURACIÓN"
-    echo -e "${BLUE}E) ESTADÍSTICAS"
+    echo -e "${GREEN}C) CONFIGURACIÓN"
+    echo -e "${BLUE}E) ESTADÍSTICAS"
     echo -e "${YELLOW}S) SALIR"
     echo -e "${NC}"
 
@@ -974,3 +979,4 @@ function SHOW_GUI
 #=========================================================================================================================================================#
 
 TEST_ARGUMENTS $*
+
