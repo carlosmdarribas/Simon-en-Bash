@@ -18,13 +18,13 @@
 CONFIG_FILE="confi.cfg"
 
 # Colores y sus parámetros.
-ORANGE='\033[0;33m' 
-PURPLE='\e[95m'
-RED='\033[0;31m'  # DEBUG: Pasar a constantes
-GREEN='\033[0;32m'  # DEBUG: Pasar a constantes
-BLUE='\033[0;36m'  # DEBUG: Pasar a constantes
-YELLOW='\033[0;33m'  # DEBUG: Pasar a constantes
-NC='\033[0m' # No Color
+ORANGE='\033[0;33m'  # Naranja
+PURPLE='\e[95m'      # Morado
+RED='\033[0;31m'     # Rojo
+GREEN='\033[0;32m'   # Verde
+BLUE='\033[0;36m'    # Azul
+YELLOW='\033[0;33m'  # Amarillo
+NC='\033[0m'         # No Color
 
 # Parámetros de READ_PARAMETERS
 INCORRECT=0         # Flag que pasa a valer 1 si encuentra algún error a la hora de leer los parámetros del archivo de configuración.
@@ -42,16 +42,21 @@ SALTO=1             # Flag que cambia la forma en que se colocan los colores.
 MODE=0              # Flag que cambia el modo de juego.
                     # 0 -> Lista seguida | 1 -> Lista intermitente.
 
+#
 # Vectores estáticos.
+#
 
 # Colores que pueden aparecer como máximo en la secuencia.
 declare -a STATICS_COLORS=('R' 'A' 'V' 'Z') 
 # Formato en el que aparecen las jugadas especiales dentro de STATS
 declare -a FORMAT=("Partida: " "Fecha: " "Hora: " "Número de colores: " "Tiempo jugado (seg): " "Longitud de la secuencia: " "Secuencia de colores: ") 
 
-# Parámetros comunes a todo el programa
+#
+# Parámetros globales de control
+#
 ERROR=0         # Variable que nos indica el tipo de error. 0 => No hay errores.
 SALIR=false     # Variable que controla la ejecución de SHOW_GUI.
+
 
 ###########################################################################################################################################################
 ###########################################################################################################################################################
@@ -59,6 +64,7 @@ SALIR=false     # Variable que controla la ejecución de SHOW_GUI.
 #                                                     |G|R|O|U|P| |I|N|F|O|R|M|A|T|I|O|N|                                                                 #
 #                                                     +-+-+-+-+-+ +-+-+-+-+-+-+-+-+-+-+-+                                                                 #
 #=========================================================================================================================================================#
+
 #
 # SHOW_ALLOWED_ARGUMENTS
 #
@@ -97,6 +103,7 @@ function SHOW_GROUP_DATA
 #                                                     |C|A|S|E| |1| |G|A|M|E|                                                                             #
 #                                                     +-+-+-+-+ +-+ +-+-+-+-+                                                                             #
 #=========================================================================================================================================================#
+
 #
 # GAME
 #
@@ -114,7 +121,7 @@ function GAME
     fi
 
     # Inicio de una de las variables que nos permitirá medir el tiempo de juego.
-    TIME_INIT=$(date +'%s')
+    TIME_INIT=$SECONDS
 
     # Variables de GAME
 
@@ -151,7 +158,8 @@ function GAME
         fi
 
         # El bucle se ejecutará siempre que el jugador no haya ganado, perdido, o que el índice del color actual sea distinto que el número total de colores. 
-        # (esto último sirve para que cuando el jugador haya terminado su secuencia de colores de manera correcta pero no sea la secuencia ganadora, salga del bucle, listo para la siguiente secuencia)
+        # (esto último sirve para que cuando el jugador haya terminado su secuencia de colores de manera correcta pero no sea la secuencia ganadora, salga del bucle,
+        # listo para la siguiente secuencia)
         while [[ $GAME_OVER -eq 0 && $COLOR_INDEX -ne $COLOR_NUM && $SUCCES -eq 0 ]]; do
             
             if [[ $MENU -eq 2 ]]; then
@@ -164,7 +172,7 @@ function GAME
             # Si el número de colores de la secuencia actual coincide con el número de colores necesarios para ganar, el jugador ganará.
             if [[ $COLOR_NUM -eq  $((NUM_ACIERTOS+1)) ]]; then
                 SUCCES=1
-                TIME_FIN=$(date +'%s')
+                TIME_FIN=$SECONDS
                 WRITE_TO_LOG
                 PRINT_WINNER 
                 PRESS_TO_CONTINUE
@@ -184,7 +192,7 @@ function GAME
                     clear
                     PRINT_GAME_OVER
                     GAME_OVER=1
-                    TIME_FIN=$(date +'%s')
+                    TIME_FIN=$SECONDS
                     WRITE_TO_LOG
                 # Si el jugador falla pero le quedan intentos, se mostrará por pantalla el número de intentos restantes y se imprimirá de nuevo la secuencia de colores.
                 else
@@ -276,10 +284,11 @@ function COLOR_INFO
 
 ###########################################################################################################################################################
 ###########################################################################################################################################################
-#                                                     +-+-+-+-+ +-+ +-+-+-+-+-+-+                                                                         #
-#                                                     |C|A|S|E| |2| |C|O|N|F|I|G|                                                                         #
-#                                                     +-+-+-+-+ +-+ +-+-+-+-+-+-+                                                                         #
+#                                                     +-+-+-+-+ +-+   +-+-+-+-+-+-+                                                                         #
+#                                                     |C|A|S|E| |2| | |C|O|N|F|I|G|                                                                         #
+#                                                     +-+-+-+-+ +-+   +-+-+-+-+-+-+                                                                         #
 #=========================================================================================================================================================#
+
 #
 # CONFIG_MENU
 #
@@ -324,18 +333,19 @@ function CONFIG_MENU
 # En el caso de recibir un 1, indica que se desea editar y mostrará los valores actuales al usuario.
 function CREATE_CONFIG_FILE
 {
+    CORRECT=0 # Correct actúa a lo largo de la función como un flag para comprobar si la ejecución ha sido correcta.
 
     # Comprobamos el acceso al fichero de config.
-    CORRECT=0
-    if [[ $1 -eq 1 ]]; then
+    if [[ $1 -eq 1 ]]; then # Comparamos el valor del primer parámetro.
         until [[ $CORRECT -eq 1 ]]; do
-            if ! [[ -f $CONFIG_FILE ]]; then
+            if ! [[ -f $CONFIG_FILE ]]; then # Comprobamos los permisos de acceso al fichero.
                 echo -e "\n"${RED}"ERROR: "${NC}"Ruta o permisos inválidos al fichero de configuracion "$CONFIG_FILE
                 PRESS_TO_CONTINUE
-            elif  ! [[ -r $CONFIG_FILE ]] || ! [[ -w $CONFIG_FILE ]] &&  [[ -a $CONFIG_FILE ]]; then
+            elif  ! [[ -r $CONFIG_FILE ]] || ! [[ -w $CONFIG_FILE ]] &&  [[ -a $CONFIG_FILE ]]; then # Comprobamos si no se puede leer, escribir y editar.
                 echo -e "\n"${RED}"ERROR: "${NC}"Acceso denegado al fichero de configuracion."
                 PRESS_TO_CONTINUE
             else
+                # Todas las condiciones se han cumplido. Proseguimos.
                 CORRECT=1
             fi
         done
@@ -427,6 +437,7 @@ function CREATE_CONFIG_FILE
 #                                                     |C|A|S|E| |3| |S|T|A|T|S|                                                                           #
 #                                                     +-+-+-+-+ +-+ +-+-+-+-+-+                                                                           #
 #=========================================================================================================================================================#
+
 #
 # STATS
 #
@@ -627,6 +638,7 @@ function PRESENT_STATS
 #                                                     |F|U|N|C|I|O|N|E|S|  |A|U|X|I|L|I|A|R|E|S|                                                          #
 #                                                     +-+-+-+-+-+-+-+-+-+  +-+-+-+-+-+-+-+-+-+-+                                                          #
 #=========================================================================================================================================================#
+
 #
 # TEST_ARGUMENTS
 #
@@ -708,6 +720,7 @@ function READ_PARAMETERS
         ASK_FOR_CONFIG_FILE_CREATION 
     fi
 }
+
 #
 # ASK_FOR_CONFIG_FILE_CREATION
 #
@@ -732,19 +745,21 @@ function ASK_FOR_CONFIG_FILE_CREATION
         fi
     done
 }
+
 #
 # WRITE_TO_LOG
 #
 # Escribimos en el log previamente definido ($STATS_FILE) los datos correspondientes.
 #
+
 function WRITE_TO_LOG
 {
     # Partida|Fecha|Hora|Numerocolores|Tiempo|Longitudsecuencia|SecuenciaColores
 
     PID=$$
     DATE_AND_TIME=$(date +'%m-%d-%Y|%H:%M:%S')
-    LONG_SEC=$((COLOR_NUM-1)) # Cambiar en produccion
-    TIME_PLAYED=$((TIME_FIN-TIME_INIT)) #Implementar
+    LONG_SEC=$((COLOR_NUM-1))
+    TIME_PLAYED=$((TIME_FIN-TIME_INIT))
 
     echo -ne $PID"|"$DATE_AND_TIME"|"$NUM_COLORS"|"$TIME_PLAYED"|"$LONG_SEC"|"  >> $STATS_FILE   
     
@@ -758,6 +773,7 @@ function WRITE_TO_LOG
         echo "" >> $STATS_FILE
     fi
 }
+
 #
 # PRESS_TO_CONTINUE
 #
@@ -769,6 +785,7 @@ function PRESS_TO_CONTINUE
     read
     echo -e "\n"${NC}
 }
+
 #
 # FINISH_PROGRAM
 #
@@ -786,6 +803,7 @@ function FINISH_PROGRAM
     echo  "."
     exit
 }
+
 #
 # CHECK_ERROR
 #
@@ -794,9 +812,10 @@ function FINISH_PROGRAM
 function CHECK_ERROR
 {
     if [[ $ERROR -ne 0 ]]; then # Si !0
-        PRINT_ERROR $ERROR  #IMPLEMENTAR PRINT_ERROR
+        PRINT_ERROR $ERROR
     fi
 }
+
 #
 # PRINT_ERROR
 #
@@ -892,6 +911,7 @@ function PRINT_WINNER
 #                                                     |F|U|N|C|I|O|N| |P|R|I|N|C|I|P|A|L|                                                                 #
 #                                                     +-+-+-+-+-+-+-+ +-+-+-+-+-+-+-+-+-+                                                                 #
 #=========================================================================================================================================================#
+
 #
 # SHOW_GUI
 #
