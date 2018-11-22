@@ -314,11 +314,11 @@ function CONFIG_MENU
         echo ""
     else
         echo "\nOpcion incorrecta. Saliendo al menu principal"
-        sleep 0.5
+        sleep 1
         echo -ne "."
-        sleep 0.5
+        sleep 1
         echo -ne "."
-        sleep 0.5
+        sleep 1
         echo -ne "."
     fi
     # Una vez terminado de editar el archivo, mostramos el menu principal.
@@ -356,7 +356,7 @@ function CREATE_CONFIG_FILE
     until [[ $CORRECT -eq 1 ]]; do
         if [[ $1 -eq 1 ]]; then
             # Modo edicion. Mostramos el valor actual.
-            echo -ne " \nIntroduzca el número de colores (entre 2 y 4)[Valor actual ="${BLUE}$NUM_COLORS${NC}"]: " 
+            echo -ne " \nIntroduzca el número de colores (entre 2 y 4)[Valor actual = "${BLUE}$NUM_COLORS${NC}"]: " 
         else 
             # Modo creación. NO mostramos el valor actual, ya que no existe o no es relevante.
             printf "\nIntroduzca el número de colores (entre 2 y 4): "
@@ -379,7 +379,7 @@ function CREATE_CONFIG_FILE
     until [[ $CORRECT -eq 1 ]]; do
         if [[ $1 -eq 1 ]]; then
             # Modo edicion. Mostramos el valor actual.
-            echo -ne "Introduzca el tiempo entre opciones (entre 1 y 4)[Valor actual ="${BLUE}$TIME_BETWEEN${NC}"]: "
+            echo -ne "Introduzca el tiempo entre opciones (entre 1 y 4)[Valor actual = "${BLUE}$TIME_BETWEEN${NC}"]: "
         else
             # Modo creación. NO mostramos el valor actual, ya que no existe o no es relevante.
             printf "Introduzca el tiempo entre opciones (entre 1 y 4): "
@@ -401,7 +401,7 @@ function CREATE_CONFIG_FILE
     CORRECT=0
     until [[ $CORRECT -eq 1 ]]; do
 
-        read -e -p "Introduzca el nombre y ubicacion del fichero de log: " -i $(pwd)"/log.txt" READ_FILE_PATH
+        read -e -p "Introduzca el nombre y ubicacion del fichero de log: " -i "log.txt" READ_FILE_PATH
         touch $READ_FILE_PATH
 
         # Comprobamos que la ruta existe y es un directorio.
@@ -706,7 +706,6 @@ function READ_PARAMETERS
                 fi    
                 ;;
                 "ESTADISTICAS" ) STATS_FILE=$VALUE
-                STATS_FILE_NAME=$(echo $STATS_FILE | rev | cut -f 1 -d "/" | rev)   # STATS_FILE_NAME contiene el nombre del archivo de log (sin la ruta Ej.: "log.txt")
                 if ! test -f $STATS_FILE ; then                                     # En caso de que el directorio no exista.
                     ERROR=10    
                     INCORRECT=1
@@ -731,7 +730,6 @@ function READ_PARAMETERS
         ASK_FOR_CONFIG_FILE_CREATION 
     fi
 }
-
 #
 # ASK_FOR_CONFIG_FILE_CREATION
 #
@@ -857,9 +855,10 @@ function PRINT_ERROR
         "8")echo -e "(READ_PARAMETERS) "${NC}"\n El parámetro NUMCOLORES del archivo "$CONFIG_FILE" es incorrecto.\n";;
         "9")echo -e "(READ_PARAMETERS) "${NC}"\n El parámetro ENTRETIEMPO del archivo "$CONFIG_FILE" es incorrecto.\n";;
         "10")echo -e "(READ_PARAMETERS) "${NC}"\n El parámetro STATS_FILE del archivo "$CONFIG_FILE" es incorrecto o no se encuentra en el directorio del programa.\n";;
-        "11")echo -e "(STATS) "${NC}"\n El archivo "$STATS_FILE_NAME" está vacio.\n"
+        "11")echo -e "(STATS) "${NC}"\n El archivo de log está vacio.\n"
             sleep 2;;
     esac
+
     ERROR=0
 }
 
