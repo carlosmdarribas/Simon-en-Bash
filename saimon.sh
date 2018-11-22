@@ -454,29 +454,29 @@ function STATS
 
         # Variables de STATS
 
-        GAMES=0                                 # Variable que almacenará el número de partidas jugadas almacenadas en el archivo de log.
-        NUM_PERCENT=0                           # Variable que almacenará el número de colores de la partida con la mayor secuencia de colores
-                                                # para poder hallar los porcentajes de cada color.
+        GAMES=0                       # Variable que almacenará el número de partidas jugadas almacenadas en el archivo de log.
+        NUM_PERCENT=0                 # Variable que almacenará el número de colores de la partida con la mayor secuencia de colores
+                                      # para poder hallar los porcentajes de cada color.
 
-        TOTAL_TIME=0                            # Variable que almacenará el tiempo total de juego. (Suma de los tiempos de todas las partidas del archivo de log)
-        TOTAL_LENGTH=0                          # Variable que almacenará la suma de todas las longitudes de las secuencias de colores de
-                                                # las partidas almacenadas en el archivo de log.
+        TOTAL_TIME=0                  # Variable que almacenará el tiempo total de juego. (Suma de los tiempos de todas las partidas del archivo de log)
+        TOTAL_LENGTH=0                # Variable que almacenará la suma de todas las longitudes de las secuencias de colores de
+                                      # las partidas almacenadas en el archivo de log.
 
-        SHORTEST_TIME=1000                      # Varible que ayudará a encontrar aquella partida con el menor tiempo de juego.
-        LONGEST_TIME=0                          # Varible que ayudará a encontrar aquella partida con el mayor tiempo de juego.
-        SHORTEST_COLORSEC=1000                  # Varible que ayudará a encontrar aquella partida con la menor secuencia de colores.
-        LONGEST_COLORSEC=0                      # Varible que ayudará a encontrar aquella partida con la mayor secuencia de colores.
-        NUMCOLOR_SEC_LONGEST=0.0f               # Varible que almacenará el valor del número de colores de aquella partida con la secuancia de colores más larga.
+        SHORTEST_TIME=1000            # Varible que ayudará a encontrar aquella partida con el menor tiempo de juego.
+        LONGEST_TIME=0                # Varible que ayudará a encontrar aquella partida con el mayor tiempo de juego.
+        SHORTEST_COLORSEC=1000        # Varible que ayudará a encontrar aquella partida con la menor secuencia de colores.
+        LONGEST_COLORSEC=0            # Varible que ayudará a encontrar aquella partida con la mayor secuencia de colores.
+        NUMCOLOR_SEC_LONGEST=0.0f     # Varible que almacenará el valor del número de colores de aquella partida con la secuancia de colores más larga.
 
-        TIME_AVERAGE=0                          # Variable que almacenará el valor promedio de todos los tiempos de las partidas del archivo de log.
-        LENGTH_AVERAGE=0                        # Variable que almacenará el valor promedio de todas las longitudes de las partidas del archivo de log.
+        TIME_AVERAGE=0                # Variable que almacenará el valor promedio de todos los tiempos de las partidas del archivo de log.
+        LENGTH_AVERAGE=0              # Variable que almacenará el valor promedio de todas las longitudes de las partidas del archivo de log.
 
-        declare -a LENGTHS                      # Vector que contendrá los valores de las longitudes de la secuencia de colores de cada
-        declare -a TIMES                        # Vector que contendrá los valores de los tiempos de cada partida.
-        declare -a SHORTEST_GAME                # Vector que contendrá la información relevante a aquella partida con menor duración.
-        declare -a LONGEST_GAME                 # Vector que contendrá la información relevante a aquella partida con mayor duración.
-        declare -a SHORTEST_COLORSEC_GAME       # Vector que contendrá la información relevante a aquella partida con la menor secuencia de colores.
-        declare -a LONGEST_COLORSEC_GAME        # Vector que contendrá la información relevante a aquella partida con la mayor secuencia de colores.
+        declare -a LENGTHS                # Vector que contendrá los valores de las longitudes de la secuencia de colores de cada
+        declare -a TIMES                  # Vector que contendrá los valores de los tiempos de cada partida.
+        declare -a SHORTEST_GAME          # Vector que contendrá la información relevante a aquella partida con menor duración.
+        declare -a LONGEST_GAME           # Vector que contendrá la información relevante a aquella partida con mayor duración.
+        declare -a SHORTEST_COLORSEC_GAME # Vector que contendrá la información relevante a aquella partida con la menor secuencia de colores.
+        declare -a LONGEST_COLORSEC_GAME  # Vector que contendrá la información relevante a aquella partida con la mayor secuencia de colores.
 
         declare -a COLOR_SEC_LONGEST            # Vector que contendrá la secuencia de colores de la parida con la secuencia de colores más larga.
         declare -a PERCENTS=("0" "0" "0" "0")   # Vector que contendrá los porcentajes de cada color.(R A V Z).
