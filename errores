@@ -12,3 +12,4 @@ ERRORES
 8: (READ_PARAMETERS) "El parámetro NUMCOLORES del archivo "$CONFIG_FILE" es incorrecto."
 9: (READ_PARAMETERS) "El parámetro ENTRETIEMPO del archivo "$CONFIG_FILE" es incorrecto."
 10: (READ_PARAMETERS) "El parámetro STATS_FILE del archivo "$CONFIG_FILE" es incorrecto o no se encuentra en el directorio del programa."
+11: (STATS) "El archivo "$STATS_FILE_NAME" está vacio" (No salir / Sleep)

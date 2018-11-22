@@ -26,6 +26,9 @@ BLUE='\033[0;36m'  # DEBUG: Pasar a constantes
 YELLOW='\033[0;33m'  # DEBUG: Pasar a constantes
 NC='\033[0m' # No Color
 
+# Parámetros de READ_PARAMETERS
+INCORRECT=0         # Flag que pasa a valer 1 si encuentra algún error a la hora de leer los parámetros del archivo de configuración.
+
 # Parámetros de configuración.
 NUM_COLORS=0
 STATS_FILE=""
@@ -39,12 +42,16 @@ SALTO=1             # Flag que cambia la forma en que se colocan los colores.
 MODE=0              # Flag que cambia el modo de juego.
                     # 0 -> Lista seguida | 1 -> Lista intermitente.
 
-# Vector que almacenará los colores de la secuencia en GAME.
-declare -a COLORS
-declare -a STATICS_COLORS=('R' 'A' 'V' 'Z') # Colores que pueden aparecer como máximo en la secuencia.
+# Vectores estáticos.
 
-ERROR=0 #0 = No errors
-SALIR=false
+# Colores que pueden aparecer como máximo en la secuencia.
+declare -a STATICS_COLORS=('R' 'A' 'V' 'Z') 
+# Formato en el que aparecen las jugadas especiales dentro de STATS
+declare -a FORMAT=("Partida: " "Fecha: " "Hora: " "Número de colores: " "Tiempo jugado (seg): " "Longitud de la secuencia: " "Secuencia de colores: ") 
+
+# Parámetros comunes a todo el programa
+ERROR=0         # Variable que nos indica el tipo de error. 0 => No hay errores.
+SALIR=false     # Variable que controla la ejecución de SHOW_GUI.
 
 ###########################################################################################################################################################
 ###########################################################################################################################################################
@@ -90,13 +97,26 @@ function SHOW_GROUP_DATA
 #                                                     |C|A|S|E| |1| |G|A|M|E|                                                                             #
 #                                                     +-+-+-+-+ +-+ +-+-+-+-+                                                                             #
 #=========================================================================================================================================================#
-
+#
+# GAME
+#
+# Función principal del script. Permite al usuario jugar a Saimon.
+#
 function GAME
 {
+    # Leemos los parámetros procedentes del archivo de configuración.
     READ_PARAMETERS
 
+    # Si se ha producido algún error en la lectura, se volverá al menu principal.
+    if [[ INCORRECT -eq 1 ]]; then
+        sleep 3
+        SHOW_GUI
+    fi
+
+    # Inicio de una de las variables que nos permitirá medir el tiempo de juego.
     TIME_INIT=$(date +'%s')
 
+    # Variables de GAME
 
     NUM_FALLOS=0        # Variable contador que posee el valor del número de fallos cometidos 
     NUM_MAX_FALLOS=0    # Número máximo de fallos permitidos por el jugador.
@@ -106,7 +126,9 @@ function GAME
     COLOR_NUM=0         # Variable que contiene el número total de colores.
     COLOR_INDEX=0       # Variable que contiene el índice del color actual.
 
-    #Mostramos la información sobre los colores.
+    declare -a COLORS   # Vector que almacenará los colores de la secuencia.
+
+    #Mostramos la información necesaria para jugar.
     COLOR_INFO 
 
     while [[ $GAME_OVER -eq 0 ]]; do
@@ -119,6 +141,7 @@ function GAME
         COLOR_NUM=$((COLOR_NUM+1))
 
         COLOR_INDEX=0
+        # Si el jugador ha ganado, no se imprimirán los colores de la secuencia por pantalla.
         if [[ $COLOR_NUM -ne  $((NUM_ACIERTOS+1)) ]]; then
             PRESENT_COLORS
         fi
@@ -127,6 +150,8 @@ function GAME
             clear 
         fi
 
+        # El bucle se ejecutará siempre que el jugador no haya ganado, perdido, o que el índice del color actual sea distinto que el número total de colores. 
+        # (esto último sirve para que cuando el jugador haya terminado su secuencia de colores de manera correcta pero no sea la secuencia ganadora, salga del bucle, listo para la siguiente secuencia)
         while [[ $GAME_OVER -eq 0 && $COLOR_INDEX -ne $COLOR_NUM && $SUCCES -eq 0 ]]; do
             
             if [[ $MENU -eq 2 ]]; then
@@ -136,6 +161,7 @@ function GAME
                 echo ""
             fi
 
+            # Si el número de colores de la secuencia actual coincide con el número de colores necesarios para ganar, el jugador ganará.
             if [[ $COLOR_NUM -eq  $((NUM_ACIERTOS+1)) ]]; then
                 SUCCES=1
                 TIME_FIN=$(date +'%s')
@@ -145,19 +171,22 @@ function GAME
                 SHOW_GUI
             fi
 
+            # Toma de los valores de la secuncia.
             printf "\nIntroduzca el color de la posición "
             printf $((COLOR_INDEX+1))": "
             read COLOR
             COLOR=$(echo ${COLOR^^})
 
+            # Si el jugador falla. 
             if [[ $COLOR != ${COLORS[$COLOR_INDEX]} ]]; then
+                # Si el numero de fallos cometidos es igual al número de fallos permitidos, el jugador perderá
                 if [[ $NUM_FALLOS -eq $NUM_MAX_FALLOS ]]; then
-                    # En caso de que el jugador falle y no le queden intentos.
                     clear
                     PRINT_GAME_OVER
                     GAME_OVER=1
                     TIME_FIN=$(date +'%s')
                     WRITE_TO_LOG
+                # Si el jugador falla pero le quedan intentos, se mostrará por pantalla el número de intentos restantes y se imprimirá de nuevo la secuencia de colores.
                 else
                     # En caso de que el jugador falle pero todavia le queden intentos.
                     NUM_FALLOS=$((NUM_FALLOS+1))
@@ -176,9 +205,11 @@ function GAME
         done
     done
 }
-
-
-
+#
+# PRESENT_COLORS
+#
+# Presenta por pantalla la secuncia de colores de Saimon con un tiempo entre colores establecido en el archivo de configuración.
+#
 function PRESENT_COLORS
 {
     clear
@@ -192,7 +223,11 @@ function PRESENT_COLORS
         fi
     done
 }
-
+#
+# SHOW_COLOR
+#
+# Función auxiliar de PRESENT_COLORS que muestra los colores mediante ████ de colores.
+#
 function SHOW_COLOR
 {
     if [[ $(($J%5)) -eq 0 && $J -ne 0 && $SALTO -eq 1 ]]; then
@@ -212,7 +247,12 @@ function SHOW_COLOR
     esac
 
 }
-
+#
+# COLOR_INFO
+#
+# Función que aporta la información necesaria al usuario para jugar a Saimon. 
+# La información presentada depende del parámetro del número de colores del archivo de configuración.
+#
 function COLOR_INFO
 {
     echo ""
@@ -240,21 +280,24 @@ function COLOR_INFO
 #                                                     |C|A|S|E| |2| |C|O|N|F|I|G|                                                                         #
 #                                                     +-+-+-+-+ +-+ +-+-+-+-+-+-+                                                                         #
 #=========================================================================================================================================================#
-
+#
+# CONFIG_MENU
+#
+# Función que presenta por pantalla los parámetros del archivo de configuración y pregunta al usuario si desea editarlos.
+#
 function CONFIG_MENU
 {
-
     # Se lee el archivo de parámetros actuales.
     READ_PARAMETERS
 
-    # Se solicitan al usuario los nuevos valores.
+    # Se muestran al usuario los valores de las variables del archivo de configuración.
     echo ""
-    echo -e "+ Número de colores: "$NUM_COLORS
-    echo -e "+ Tiempo entre muestras: "$TIME_BETWEEN
-    echo -e "+ Ruta del fichero de log: "$STATS_FILE
+    echo -e "+ Número de colores: "${ORANGE}$NUM_COLORS${NC}
+    echo -e "+ Tiempo entre muestras: "${ORANGE}$TIME_BETWEEN${NC}
+    echo -e "+ Ruta del fichero de log: "${ORANGE}$STATS_FILE${NC}
 
     # Se muestra una línea en blanco y se pregunta si se desea modificar. 
-    echo
+    echo ""
     read -p "¿Desea editar el archivo de configuración? [Y/N]: "
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         CREATE_CONFIG_FILE 1
@@ -269,6 +312,7 @@ function CONFIG_MENU
         sleep 0.5
         echo -ne "."
     fi
+    # Una vez terminado de editar el archivo, mostramos el menu principal.
     PRESS_TO_CONTINUE
     SHOW_GUI
 }
@@ -302,13 +346,15 @@ function CREATE_CONFIG_FILE
     until [[ $CORRECT -eq 1 ]]; do
         if [[ $1 -eq 1 ]]; then
             # Modo edicion. Mostramos el valor actual.
-            echo -ne " \nIntroduzca el número de colores (entre 2 y 4)[ Valor actual =" ${BLUE} $NUM_COLORS ${NC}"]: " 
+            echo -ne " \nIntroduzca el número de colores (entre 2 y 4)[Valor actual ="${BLUE}$NUM_COLORS${NC}"]: " 
         else 
+            # Modo creación. NO mostramos el valor actual, ya que no existe o no es relevante.
             printf "\nIntroduzca el número de colores (entre 2 y 4): "
         fi
 
         read READ_NUM_COLOURS
 
+        # Comprobamos que el nuevo valor esté entre 2 y 4.
         if [[ $READ_NUM_COLOURS -gt 4 || $READ_NUM_COLOURS -lt 2 ]]; then
             clear
             echo -e "\n"${RED}"ERROR: "${NC}"El parámetro introducido es incorrecto."
@@ -323,12 +369,15 @@ function CREATE_CONFIG_FILE
     until [[ $CORRECT -eq 1 ]]; do
         if [[ $1 -eq 1 ]]; then
             # Modo edicion. Mostramos el valor actual.
-            echo -ne "Introduzca el tiempo entre opciones (entre 1 y 4)[ Valor actual =" ${BLUE} $TIME_BETWEEN ${NC}"]: "
+            echo -ne "Introduzca el tiempo entre opciones (entre 1 y 4)[Valor actual ="${BLUE}$TIME_BETWEEN${NC}"]: "
         else
+            # Modo creación. NO mostramos el valor actual, ya que no existe o no es relevante.
             printf "Introduzca el tiempo entre opciones (entre 1 y 4): "
         fi
+
         read READ_TIME_BETWEEN
 
+        # Comprobamos que el nuevo valor esté entre 1 y 4.
         if [[ $READ_TIME_BETWEEN -gt 4 || $READ_TIME_BETWEEN -lt 1 ]]; then
             clear
             echo -e "\n"${RED}"ERROR: "${NC}"El parámetro introducido es incorrecto."
@@ -345,10 +394,12 @@ function CREATE_CONFIG_FILE
         read -e -p "Introduzca el nombre y ubicacion del fichero de log: " -i $(pwd)"/log.txt" READ_FILE_PATH
         touch $READ_FILE_PATH
 
+        # Comprobamos que la ruta existe y es un directorio.
         if ! [[ -f $READ_FILE_PATH ]]; then
             clear
             echo -e "\n"${RED}"ERROR: "${NC}"Ruta o permisos inválidos."
             PRESS_TO_CONTINUE
+        # Comprobamos que se poseen los permisos necesarios para acceder al fichero.
         elif  ! [[ -r $READ_FILE_PATH ]] || ! [[ -w $READ_FILE_PATH ]] &&  [[ -a $READ_FILE_PATH ]];  then
             clear
             echo -e "\n"${RED}"ERROR: "${NC}"Acceso denegado sobre el fichero."
@@ -365,7 +416,7 @@ function CREATE_CONFIG_FILE
     if [[ $1 -eq 1 ]]; then
         echo -e "\nParámetros cambiados correctamente."
     elif [[ $1 -eq 0 ]]; then
-        echo -e "\nArchivo"${BLUE} $CONFIG_FILE ${NC} "creado satisfactoriamente"
+        echo -e "\nArchivo" ${BLUE}$CONFIG_FILE${NC} "creado satisfactoriamente"
     fi
 }
 
@@ -376,90 +427,103 @@ function CREATE_CONFIG_FILE
 #                                                     |C|A|S|E| |3| |S|T|A|T|S|                                                                           #
 #                                                     +-+-+-+-+ +-+ +-+-+-+-+-+                                                                           #
 #=========================================================================================================================================================#
-
+#
+# STATS
+#
+# Función que calcula las estadísticas a mostrar.
+#
 function STATS
 {
-
+    # Leemos los parámetros del archivo de configuración.
     READ_PARAMETERS
 
-    if test -r $STATS_FILE # Comprobamos que el archivo STATS_FILE exista.
-    then
+    if test -r $STATS_FILE ;then # Comprobamos que el archivo STATS_FILE exista.
 
         # Partida|Fecha|Hora|Numerocolores|Tiempo|Longitudsecuencia|SecuenciaColores
 
-        GAMES=0
-        NUM_PERCENT=0
-        TOTAL_TIME=0
-        TOTAL_LENGTH=0
-        SHORTEST_TIME=1000
-        LONGEST_TIME=0
-        SHORTEST_COLORSEC=1000
-        LONGEST_COLORSEC=0
-        NUMCOLOR_SEC_LONGEST=0.0f
+        # Variables de STATS
 
-        TIME_AVERAGE=0
-        LENGTH_AVERAGE=0
+        GAMES=0                                 # Variable que almacenará el número de partidas jugadas almacenadas en el archivo de log.
+        NUM_PERCENT=0                           # Variable que almacenará el número de colores de la partida con la mayor secuencia de colores para poder hallar los porcentajes de cada color.
+        TOTAL_TIME=0                            # Variable que almacenará el tiempo total de juego. (Suma de los tiempos de todas las partidas del archivo de log)
+        TOTAL_LENGTH=0                          # Variable que almacenará la suma de todas las longitudes de las secuencias de colores de las partidas almacenadas en el archivo de log.
+        SHORTEST_TIME=1000                      # Varible que ayudará a encontrar aquella partida con el menor tiempo de juego.
+        LONGEST_TIME=0                          # Varible que ayudará a encontrar aquella partida con el mayor tiempo de juego.
+        SHORTEST_COLORSEC=1000                  # Varible que ayudará a encontrar aquella partida con la menor secuencia de colores.
+        LONGEST_COLORSEC=0                      # Varible que ayudará a encontrar aquella partida con la mayor secuencia de colores.
+        NUMCOLOR_SEC_LONGEST=0.0f               # Varible que almacenará el valor del número de colores de aquella partida con la secuancia de colores más larga.
 
-        declare -a LENGTHS
-        declare -a TIMES
-        declare -a SHORTEST_GAME
-        declare -a LONGEST_GAME
-        declare -a SHORTEST_COLORSEC_GAME
-        declare -a LONGEST_COLORSEC_GAME
+        TIME_AVERAGE=0                          # Variable que almacenará el valor promedio de todos los tiempos de las partidas del archivo de log.
+        LENGTH_AVERAGE=0                        # Variable que almacenará el valor promedio de todas las longitudes de las partidas del archivo de log.
 
-        declare -a COLOR_SEC_LONGEST
-        declare -a PERCENTS=("0" "0" "0" "0") #(R,A,V,Z)
-        declare -a FORMAT=("Partida: " "Fecha: " "Hora: " "Número de colores: " "Tiempo jugado (seg): " "Longitud de la secuencia: " "Secuencia de colores: ")
+        declare -a LENGTHS                      # Vector que contendrá los valores de las longitudes de la secuencia de colores de cada
+        declare -a TIMES                        # Vector que contendrá los valores de los tiempos de cada partida.
+        declare -a SHORTEST_GAME                # Vector que contendrá la información relevante a aquella partida con menor duración.
+        declare -a LONGEST_GAME                 # Vector que contendrá la información relevante a aquella partida con mayor duración.
+        declare -a SHORTEST_COLORSEC_GAME       # Vector que contendrá la información relevante a aquella partida con la menor secuencia de colores.
+        declare -a LONGEST_COLORSEC_GAME        # Vector que contendrá la información relevante a aquella partida con la mayor secuencia de colores.
+
+        declare -a COLOR_SEC_LONGEST            # Vector que contendrá la secuencia de colores de la parida con la secuencia de colores más larga.
+        declare -a PERCENTS=("0" "0" "0" "0")   # Vector que contendrá los porcentajes de cada color.(R A V Z).
         
-        while IFS='' read -r line || [[ -n "$line" ]]; do # Lee linea a linea el archivo de estadisticas "STATS_FILE"
+        # Leemos linea a linea el archivo de estadisticas "STATS_FILE"
+        while IFS='' read -r line || [[ -n "$line" ]]; do 
 
-            TIMES[$GAMES]=$(echo $line | cut -f 5 -d "|")
-            LENGTHS[$GAMES]=$(echo $line | cut -f 6 -d "|")
+            TIMES[$GAMES]=$(echo $line | cut -f 5 -d "|")                               # Tomamos los tiempos de cada partida.
+            LENGTHS[$GAMES]=$(echo $line | cut -f 6 -d "|")                             # Tomamos las longitudes de cada partida.
 
-            if [[ $SHORTEST_TIME -gt ${TIMES[$GAMES]} ]]; then
+            if [[ $SHORTEST_TIME -ge ${TIMES[$GAMES]} ]]; then
                 for (( I = 0; I <= 6; I++ )); do
-                    SHORTEST_GAME[$I]=$(echo $line | cut -f $((I+1)) -d "|")
+                    SHORTEST_GAME[$I]=$(echo $line | cut -f $((I+1)) -d "|")            # Tomamos la información de la partida más corta.
                 done
                 SHORTEST_TIME=$(echo $line | cut -f 5 -d "|")                
             fi
-            if [[ $LONGEST_TIME -lt ${TIMES[$GAMES]} ]]; then
+            if [[ $LONGEST_TIME -le ${TIMES[$GAMES]} ]]; then
                 for (( I = 0; I <= 6; I++ )); do
-                    LONGEST_GAME[$I]=$(echo $line | cut -f $((I+1)) -d "|")
+                    LONGEST_GAME[$I]=$(echo $line | cut -f $((I+1)) -d "|")             # Tomamos la información de la partida más larga.
                 done
                 LONGEST_TIME=$(echo $line | cut -f 5 -d "|")
             fi
 
-            if [[ $SHORTEST_COLORSEC -gt ${LENGTHS[$GAMES]} ]]; then
+            if [[ $SHORTEST_COLORSEC -ge ${LENGTHS[$GAMES]} ]]; then
                 for (( I = 0; I <= 6; I++ )); do
-                    SHORTEST_COLORSEC_GAME[$I]=$(echo $line | cut -f $((I+1)) -d "|")
+                    SHORTEST_COLORSEC_GAME[$I]=$(echo $line | cut -f $((I+1)) -d "|")   # Tomamos la información de la partida con la secuencia de colores más corta.
                 done
                 SHORTEST_COLORSEC=$(echo $line | cut -f 6 -d "|")
             fi
-            if [[ $LONGEST_COLORSEC -lt ${LENGTHS[$GAMES]} ]]; then
+            if [[ $LONGEST_COLORSEC -le ${LENGTHS[$GAMES]} ]]; then
                 for (( I = 0; I <= 6; I++ )); do
-                    LONGEST_COLORSEC_GAME[$I]=$(echo $line | cut -f $((I+1)) -d "|")
+                    LONGEST_COLORSEC_GAME[$I]=$(echo $line | cut -f $((I+1)) -d "|")    # Tomamos la información de la partida con la secuencia de colores más larga.
                 done
                 NUMCOLOR_SEC_LONGEST=$(echo $line | cut -f 4 -d "|")
-                LONGEST_COLORSEC=$(echo $line | cut -f 6 -d "|")
-                COLOR_SEC_LONGEST=$(echo $line | cut -f 7 -d "|")
+                LONGEST_COLORSEC=$(echo $line | cut -f 6 -d "|")                        # Tomamos la longitud de la secuencia de colores de la partida con la secuencia más larga.
+                COLOR_SEC_LONGEST=$(echo $line | cut -f 7 -d "|")                       # Tomamos la secuencia de colores de la partida con la secuencia más larga.
             fi
 
-            GAMES=$((GAMES+1))
+            GAMES=$((GAMES+1))                                                          # Aumentamos el número de partidas jugadas a mediada que leemos cada línea.
 
         done < $STATS_FILE
 
+        # Si el archivo está vacío, mostramos el error y volvemos al menú principal.
+        if [[ GAMES -eq 0 ]]; then
+            ERROR=11
+            CHECK_ERROR
+            SHOW_GUI
+        fi
+
         for (( I = 0; I < $GAMES; I++ )); do
-            TOTAL_TIME=$((TOTAL_TIME+(TIMES[$I])))
+            TOTAL_TIME=$((TOTAL_TIME+(TIMES[$I])))                                      # Hallamos el tiempo total, resultado de la suma de los tiempos de todas las partidas.
         done
 
         for (( I = 0; I < $GAMES; I++ )); do
-            TOTAL_LENGTH=$((TOTAL_LENGTH+(LENGTHS[$I])))
+            TOTAL_LENGTH=$((TOTAL_LENGTH+(LENGTHS[$I])))                                # Hallamos lalongitud total, resultado de la suma de las longitudes de las secuencias de colores de todas las partidas.
         done
 
-        TIME_AVERAGE=$((TOTAL_TIME/GAMES))
-        LENGTH_AVERAGE=$((TOTAL_LENGTH/GAMES))
 
-        for (( I = 1; I <= $LONGEST_COLORSEC; I++ )); do  
+        TIME_AVERAGE=$((TOTAL_TIME/GAMES))                                              # Hallamos el tiempo medio.                                         
+        LENGTH_AVERAGE=$((TOTAL_LENGTH/GAMES))                                          # Hallamos la longitud media.
+
+        for (( I = 1; I <= $LONGEST_COLORSEC; I++ )); do                                # Sumamos 1 dentro de cada campo de PERCENTS dependiendo del color de la secuencia de la partida con la secuencia más larga.
             KEY=$(echo $COLOR_SEC_LONGEST | cut -f $I -d "-")
                 case $KEY in
                     "R")
@@ -476,32 +540,46 @@ function STATS
                     ;;
                     *)ERROR=7 CHECK_ERROR;;
                 esac
-            NUM_PERCENT=$((NUM_PERCENT+1)) 
+            NUM_PERCENT=$((NUM_PERCENT+1))                                              # Hallamos el número de colores de la secuencia de colores de la partida con la mayor secuencia de colores. 
         done
+
+        # Evitamos el caso en el que la longitud de la partida con mayor secuencia sea 0
+        if [[ NUM_PERCENT -eq 0 ]]; then
+            NUM_PERCENT=1
+        fi
 
         for (( I = 0; I <= $NUMCOLOR_SEC_LONGEST; I++ )); do
-            PERCENTS[$I]=$(((PERCENTS[$I]*100)/NUM_PERCENT))
+            PERCENTS[$I]=$(((PERCENTS[$I]*100)/(NUM_PERCENT)))                          # Calculamos los porentajes de cada color.
         done
 
-        PRESENT_STATS
+        # Presentamos las estadísticas.
+        PRESENT_STATS       
 
     else
+        # En caso de que no exista archivo de log, mostramos el error y sacamos al menú principal.
         ERROR=6
         CHECK_ERROR
         SHOW_GUI
     fi
 }
-
+#
+# PRESENT_STATS
+#
+# Función que presenta por pantalla las estadísticas del archivo de log.
+#
 function PRESENT_STATS
 {
     clear
     echo ""
+
+    # Estadísticas generales
     echo -e ${RED}"\t\t    GENERALES\n"${NC}
     echo -e " Número total de partidas jugadas: "${ORANGE}$GAMES${NC}
     echo -e " Media de las longitudes de las secuencias de todas las partidas jugadas: "${ORANGE}$LENGTH_AVERAGE${NC}
     echo -e " Media de los tiempos de todas las partidas jugadas: "${ORANGE}$TIME_AVERAGE${NC}
     echo -e " Tiempo total invertido en todas las partidas: "${ORANGE}$TOTAL_TIME${NC}
-
+    
+    # Estadísticas especiales
     echo -e ${RED}"\n\t\tJUGADAS ESPECIALES\n"${NC}
 
     echo " Partida más corta: "
@@ -584,41 +662,40 @@ function TEST_ARGUMENTS
 function READ_PARAMETERS
 {
 
-    INCORRECT=0
-
     if test -r $CONFIG_FILE # Comprobamos que el archivo CONFIG_FILE exista.
     then
         while IFS='' read -r line || [[ -n "$line" ]]; do # Lee linea a linea el archivo de configuracion "CONFIG_FILE"
 
-            KEY=$(echo $line | cut -f 1 -d "=")
-            VALUE=$(echo $line | cut -f 2 -d "=")
+            KEY=$(echo $line | cut -f 1 -d "=")     # KEY almacenará el valor del campo a la izquierda del =
+            VALUE=$(echo $line | cut -f 2 -d "=")   # VALUE almacenará el valor del campo a la derecha del =
 
             case $KEY in
                 "NUMCOLORES" ) NUM_COLORS=$VALUE 
-                if [[ $NUM_COLORS -gt 4 || $NUM_COLORS -lt 2 ]]; then
+                if [[ $NUM_COLORS -gt 4 || $NUM_COLORS -lt 2 ]]; then               # En caso de que el parámetro NUMCOLORES posea un valor no comprendido entre 2 y 4.
                     ERROR=8
                     INCORRECT=1
                 fi
                 ;;
                 "ENTRETIEMPO" ) TIME_BETWEEN=$VALUE
-                if [[ $TIME_BETWEEN -lt 1 || $TIME_BETWEEN -gt 4 ]]; then
+                if [[ $TIME_BETWEEN -lt 1 || $TIME_BETWEEN -gt 4 ]]; then           # En caso de que el parámetro ENTRETIEMPO posea un valor no comprendido entre 1 y 4.
                     ERROR=9
                     INCORRECT=1
                 fi    
                 ;;
                 "ESTADISTICAS" ) STATS_FILE=$VALUE
-                FILE_NAME=$(echo $STATS_FILE | rev | cut -f 1 -d "/" | rev)
-                if ! [[ $STATS_FILE == $(pwd)"/"$FILE_NAME ]] ; then
-                    ERROR=10
+                STATS_FILE_NAME=$(echo $STATS_FILE | rev | cut -f 1 -d "/" | rev)   # STATS_FILE_NAME contiene el nombre del archivo de log (sin la ruta Ej.: "log.txt")
+                if ! test -f $STATS_FILE ; then                                     # En caso de que el directorio no exista.
+                    ERROR=10    
                     INCORRECT=1
                 fi
                 ;;
-                *) ERROR=4 
+                *) ERROR=4                                                          # En caso de que el archivo de configuración posea un parámetro desconocido.
                    CHECK_ERROR;;
             esac
 
         done < $CONFIG_FILE
     else
+        # En caso de que no exista archivo de configuración, se preguntará al usuario si desea crearlo.
         ERROR=3
         CHECK_ERROR
         ASK_FOR_CONFIG_FILE_CREATION
@@ -626,6 +703,7 @@ function READ_PARAMETERS
     
     CHECK_ERROR
 
+    # En caso de que alguno de los parametros contenidos en el archivo de configuracion sea incorrecto, se le preguntará al usuario si desea crearlo de nuevo.
     if [[ $INCORRECT -eq 1 ]]; then
         ASK_FOR_CONFIG_FILE_CREATION 
     fi
@@ -643,6 +721,7 @@ function ASK_FOR_CONFIG_FILE_CREATION
         if [[ $CREATION_FILE_OPTION =~ ^[Yy]$ ]]; then
                 CREATE_CONFIG_FILE 0
                 PRESS_TO_CONTINUE
+                INCORRECT=0
                 SHOW_GUI
         elif [[ $CREATION_FILE_OPTION =~ ^[Nn]$ ]]; then
             FINISH_PROGRAM
@@ -661,6 +740,7 @@ function ASK_FOR_CONFIG_FILE_CREATION
 function WRITE_TO_LOG
 {
     # Partida|Fecha|Hora|Numerocolores|Tiempo|Longitudsecuencia|SecuenciaColores
+
     PID=$$
     DATE_AND_TIME=$(date +'%m-%d-%Y|%H:%M:%S')
     LONG_SEC=$((COLOR_NUM-1)) # Cambiar en produccion
@@ -668,11 +748,15 @@ function WRITE_TO_LOG
 
     echo -ne $PID"|"$DATE_AND_TIME"|"$NUM_COLORS"|"$TIME_PLAYED"|"$LONG_SEC"|"  >> $STATS_FILE   
     
-    for (( i = 0; i < COLOR_NUM-2; i++ )); do
-        echo -ne ${COLORS[$i]}"-" >> $STATS_FILE
-    done
+    if [[ $LONG_SEC -gt 0 ]]; then
+        for (( i = 0; i < COLOR_NUM-2; i++ )); do
+            echo -ne ${COLORS[$i]}"-" >> $STATS_FILE
+        done
 
-    echo -e ${COLORS[$((COLOR_NUM-1))]} >> $STATS_FILE
+        echo -e ${COLORS[$((COLOR_NUM-1))]} >> $STATS_FILES
+    else
+        echo "" >> $STATS_FILE
+    fi
 }
 #
 # PRESS_TO_CONTINUE
@@ -692,7 +776,6 @@ function PRESS_TO_CONTINUE
 #
 function FINISH_PROGRAM
 {
-
     TIME_TO_SLEEP=0.6
     echo -ne "\nSaliendo del programa"
     sleep $TIME_TO_SLEEP
@@ -717,52 +800,35 @@ function CHECK_ERROR
 #
 # PRINT_ERROR
 #
-# Imprime en pantalla un mensaje acerca del error que ha ocurrido.
+# Imprime en pantalla un mensaje acerca del error ocurrido.
 #
 function PRINT_ERROR
 {
 
     clear
-    echo -e ${RED}"\n\tERROR "$1": "${NC}
+    echo -ne ${RED}"\n ERROR "$1": "${BLUE}
 
     case $ERROR in
-        "1")
-            echo -e ${BLUE}"\t(TEST_ARGUMENTS) "${NC}"Número incorrecto de argumentos.\n"
-            SALIR=1
-        ;;
-        "2")
-            echo -e ${BLUE}"\t(TEST_ARGUMENTS) "${NC}"El argumento es incorrecto.\n"
+        "1")echo -e "(TEST_ARGUMENTS) "${NC}"\n Número incorrecto de argumentos.\n"
+            SALIR=1;;
+        "2")echo -e "(TEST_ARGUMENTS) "${NC}"\n El argumento es incorrecto.\n"
             sleep 2
-            SALIR=1
-        ;;
-        "3")
-            echo -e ${BLUE}"\t(READ_PARAMETERS) "${NC}"El archivo de configuracion no existe o no se puede leer.\n"
-        ;;
-        "4")
-            echo -e ${BLUE}"\t(READ_PARAMETERS) "${NC}"Parametro de configuracion no encontrado.\n"
-        ;;
-        "5")
-            echo -e ${BLUE}"\t(SHOW_COLOR) "${NC}"Color no especificado.\n"
-            SALIR=1
-        ;;        
-        "6")
-            echo -e ${BLUE}"\t(STATS) "${NC}"El archivo de log no existe o no se puede leer.\n"
-            sleep 2
-        ;;
-        "7")
-            echo -e ${BLUE}"\t(STATS) "${NC}"Color no especificado.\n"
-            SALIR=1
-        ;; 
-        "8")
-            echo -e ${BLUE}"\t(READ_PARAMETERS) "${NC}"El parámetro NUMCOLORES del archivo "$CONFIG_FILE" es incorrecto.\n"
-        ;;
-        "9")
-            echo -e ${BLUE}"\t(READ_PARAMETERS) "${NC}"El parámetro ENTRETIEMPO del archivo "$CONFIG_FILE" es incorrecto.\n"
-        ;;
-        "10")
-            echo -e ${BLUE}"\t(READ_PARAMETERS) "${NC}"El parámetro STATS_FILE del archivo "$CONFIG_FILE" es incorrecto o no se encuentra en el directorio del programa.\n"
-        ;;
+            SALIR=1;;
+        "3")echo -e "(READ_PARAMETERS) "${NC}"\n El archivo de configuracion no existe o no se puede leer.\n";;
+        "4")echo -e "(READ_PARAMETERS) "${NC}"\n Parametro de configuracion no encontrado.\n";;
+        "5")echo -e "(SHOW_COLOR) "${NC}"\n Color no especificado.\n"
+            SALIR=1;;        
+        "6")echo -e "(STATS) "${NC}"\n El archivo de log no existe o no se puede leer.\n"
+            sleep 2;;
+        "7")echo -e "(STATS) "${NC}"\n Color no especificado.\n"  
+            SALIR=1;; 
+        "8")echo -e "(READ_PARAMETERS) "${NC}"\n El parámetro NUMCOLORES del archivo "$CONFIG_FILE" es incorrecto.\n";;
+        "9")echo -e "(READ_PARAMETERS) "${NC}"\n El parámetro ENTRETIEMPO del archivo "$CONFIG_FILE" es incorrecto.\n";;
+        "10")echo -e "(READ_PARAMETERS) "${NC}"\n El parámetro STATS_FILE del archivo "$CONFIG_FILE" es incorrecto o no se encuentra en el directorio del programa.\n";;
+        "11")echo -e "(STATS) "${NC}"\n El archivo "$STATS_FILE_NAME" está vacio.\n"
+            sleep 2;;
     esac
+    ERROR=0
 }
 
 ###########################################################################################################################################################
@@ -774,7 +840,6 @@ function PRINT_ERROR
 
 function DISPLAY_MENU
 {
-    #echo -ne "\033]11;#800000\007"
 
     echo -e "\n${PURPLE}"
     echo "███████╗ █████╗ ██╗███╗   ███╗ ██████╗ ███╗   ██╗"
@@ -827,7 +892,11 @@ function PRINT_WINNER
 #                                                     |F|U|N|C|I|O|N| |P|R|I|N|C|I|P|A|L|                                                                 #
 #                                                     +-+-+-+-+-+-+-+ +-+-+-+-+-+-+-+-+-+                                                                 #
 #=========================================================================================================================================================#
-
+#
+# SHOW_GUI
+#
+# Muestra el menú principal y las opciones asociadas a este.
+#
 function SHOW_GUI
 {
     until test $SALIR = true
@@ -870,5 +939,11 @@ function SHOW_GUI
     done
 }
 
-# NUEVA FUNCION PRINCIPAL
+###########################################################################################################################################################
+###########################################################################################################################################################
+#                                                                  +-+-+-+-+                                                                              #
+#                                                                  |M|A|I|N|                                                                              #
+#                                                                  +-+-+-+-+                                                                              #
+#=========================================================================================================================================================#
+
 TEST_ARGUMENTS $*
