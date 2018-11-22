@@ -706,9 +706,12 @@ function READ_PARAMETERS
                 fi    
                 ;;
                 "ESTADISTICAS" ) STATS_FILE=$VALUE
-                if ! test -f $STATS_FILE ; then                                     # En caso de que el directorio no exista.
-                    ERROR=10    
-                    INCORRECT=1
+                if ! test -f $STATS_FILE ; then  
+                    touch $STATS_FILE
+                    if ! test -f $STATS_FILE ; then                                                                       # En caso de que el directorio no exista.
+                        ERROR=10    
+                        INCORRECT=1
+                    fi
                 fi
                 ;;
                 *) ERROR=4                                                          # En caso de que el archivo de configuración posea un parámetro desconocido.
