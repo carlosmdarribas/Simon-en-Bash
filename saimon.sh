@@ -762,6 +762,7 @@ function WRITE_TO_LOG
 {
     # Partida|Fecha|Hora|Numerocolores|Tiempo|Longitudsecuencia|SecuenciaColores
 
+
     PID=$$
     DATE_AND_TIME=$(date +'%m-%d-%Y|%H:%M:%S')
     LONG_SEC=$((COLOR_NUM-1))
@@ -774,7 +775,7 @@ function WRITE_TO_LOG
             echo -ne ${COLORS[$i]}"-" >> $STATS_FILE
         done
 
-        echo -e ${COLORS[$((COLOR_NUM-1))]} >> $STATS_FILES
+        echo -e ${COLORS[$((COLOR_NUM-1))]} >> $STATS_FILE
     else
         echo "" >> $STATS_FILE
     fi
