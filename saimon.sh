@@ -455,9 +455,13 @@ function STATS
         # Variables de STATS
 
         GAMES=0                                 # Variable que almacenará el número de partidas jugadas almacenadas en el archivo de log.
-        NUM_PERCENT=0                           # Variable que almacenará el número de colores de la partida con la mayor secuencia de colores para poder hallar los porcentajes de cada color.
+        NUM_PERCENT=0                           # Variable que almacenará el número de colores de la partida con la mayor secuencia de colores
+                                                # para poder hallar los porcentajes de cada color.
+
         TOTAL_TIME=0                            # Variable que almacenará el tiempo total de juego. (Suma de los tiempos de todas las partidas del archivo de log)
-        TOTAL_LENGTH=0                          # Variable que almacenará la suma de todas las longitudes de las secuencias de colores de las partidas almacenadas en el archivo de log.
+        TOTAL_LENGTH=0                          # Variable que almacenará la suma de todas las longitudes de las secuencias de colores de
+                                                # las partidas almacenadas en el archivo de log.
+
         SHORTEST_TIME=1000                      # Varible que ayudará a encontrar aquella partida con el menor tiempo de juego.
         LONGEST_TIME=0                          # Varible que ayudará a encontrar aquella partida con el mayor tiempo de juego.
         SHORTEST_COLORSEC=1000                  # Varible que ayudará a encontrar aquella partida con la menor secuencia de colores.
@@ -523,18 +527,19 @@ function STATS
         fi
 
         for (( I = 0; I < $GAMES; I++ )); do
-            TOTAL_TIME=$((TOTAL_TIME+(TIMES[$I])))                                      # Hallamos el tiempo total, resultado de la suma de los tiempos de todas las partidas.
+            TOTAL_TIME=$((TOTAL_TIME+(TIMES[$I]))) # Hallamos el tiempo total, resultado de la suma de los tiempos de todas las partidas.
         done
 
         for (( I = 0; I < $GAMES; I++ )); do
-            TOTAL_LENGTH=$((TOTAL_LENGTH+(LENGTHS[$I])))                                # Hallamos lalongitud total, resultado de la suma de las longitudes de las secuencias de colores de todas las partidas.
+            TOTAL_LENGTH=$((TOTAL_LENGTH+(LENGTHS[$I]))) # Hallamos lalongitud total, resultado de la suma de las longitudes de las secuencias de colores de todas las partidas.
         done
 
 
-        TIME_AVERAGE=$((TOTAL_TIME/GAMES))                                              # Hallamos el tiempo medio.                                         
-        LENGTH_AVERAGE=$((TOTAL_LENGTH/GAMES))                                          # Hallamos la longitud media.
+        TIME_AVERAGE=$((TOTAL_TIME/GAMES))  # Hallamos el tiempo medio.
+        LENGTH_AVERAGE=$((TOTAL_LENGTH/GAMES))  # Hallamos la longitud media.
 
-        for (( I = 1; I <= $LONGEST_COLORSEC; I++ )); do                                # Sumamos 1 dentro de cada campo de PERCENTS dependiendo del color de la secuencia de la partida con la secuencia más larga.
+        # Sumamos 1 dentro de cada campo de PERCENTS dependiendo del color de la secuencia de la partida con la secuencia más larga.
+        for (( I = 1; I <= $LONGEST_COLORSEC; I++ )); do
             KEY=$(echo $COLOR_SEC_LONGEST | cut -f $I -d "-")
                 case $KEY in
                     "R")
@@ -551,7 +556,8 @@ function STATS
                     ;;
                     *)ERROR=7 CHECK_ERROR;;
                 esac
-            NUM_PERCENT=$((NUM_PERCENT+1))                                              # Hallamos el número de colores de la secuencia de colores de la partida con la mayor secuencia de colores. 
+            # Hallamos el número de colores de la secuencia de colores de la partida con la mayor secuencia de colores.
+            NUM_PERCENT=$((NUM_PERCENT+1))
         done
 
         # Evitamos el caso en el que la longitud de la partida con mayor secuencia sea 0
@@ -560,7 +566,7 @@ function STATS
         fi
 
         for (( I = 0; I <= $NUMCOLOR_SEC_LONGEST; I++ )); do
-            PERCENTS[$I]=$(((PERCENTS[$I]*100)/(NUM_PERCENT)))                          # Calculamos los porentajes de cada color.
+            PERCENTS[$I]=$(((PERCENTS[$I]*100)/(NUM_PERCENT)))  # Calculamos los porentajes de cada color.
         done
 
         # Presentamos las estadísticas.
@@ -793,7 +799,8 @@ function PRESS_TO_CONTINUE
 #
 function FINISH_PROGRAM
 {
-    TIME_TO_SLEEP=0.6
+    TIME_TO_SLEEP=1
+
     echo -ne "\nSaliendo del programa"
     sleep $TIME_TO_SLEEP
     echo -n "."
